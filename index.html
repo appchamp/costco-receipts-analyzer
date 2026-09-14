@@ -619,10 +619,7 @@
   <div class="page">
     <header>
       <div>
-        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <h1 style="margin: 0;"><span class="icon">🧾</span>Costco Receipt Dashboard</h1>
-          <a id="versionBadge" href="https://github.com/appchamp/costco-receipts-analyzer" target="_blank" rel="noopener noreferrer" class="version-badge" title="Latest commit on GitHub">loading version...</a>
-        </div>
+        <h1><span class="icon">🧾</span>Costco Receipt Dashboard</h1>
         <p>Upload your Costco receipts JSON to see spending insights.</p>
       </div>
       <div>
@@ -825,6 +822,14 @@
         <canvas id="monthlyChart"></canvas>
       </div>
     </section>
+
+    <footer style="margin-top: 54px; padding-top: 24px; padding-bottom: 12px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 0.8rem; color: var(--text-muted);">
+      <div>Costco Receipt Dashboard &bull; 100% Client-Side &amp; Private</div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span>Version:</span>
+        <a id="versionBadge" href="https://github.com/appchamp/costco-receipts-analyzer" target="_blank" rel="noopener noreferrer" class="version-badge" title="Latest commit on GitHub">loading version...</a>
+      </div>
+    </footer>
   </div>
 
   <script>
