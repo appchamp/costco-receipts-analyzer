@@ -568,6 +568,29 @@
       color: var(--text-main);
     }
 
+    .version-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: rgba(37, 99, 235, 0.08);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      border-radius: 999px;
+      padding: 2px 8px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      vertical-align: middle;
+      font-family: inherit;
+    }
+
+    .version-badge:hover {
+      background: rgba(37, 99, 235, 0.16);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
     .chart-wrapper {
       margin-top: 12px;
     }
@@ -596,7 +619,10 @@
   <div class="page">
     <header>
       <div>
-        <h1><span class="icon">🧾</span>Costco Receipt Dashboard</h1>
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <h1 style="margin: 0;"><span class="icon">🧾</span>Costco Receipt Dashboard</h1>
+          <a id="versionBadge" href="https://github.com/appchamp/costco-receipts-analyzer" target="_blank" rel="noopener noreferrer" class="version-badge" title="Latest commit on GitHub">loading version...</a>
+        </div>
         <p>Upload your Costco receipts JSON to see spending insights.</p>
       </div>
       <div>
@@ -2082,6 +2108,28 @@
     document.getElementById("clearFilterBtn").addEventListener("click", clearFilter);
     document.getElementById("badgeClearBtn").addEventListener("click", clearFilter);
     document.getElementById("downloadCsv").addEventListener("click", exportToCSV);
+
+    // Fetch latest commit metadata from GitHub
+    (function checkAppVersion() {
+      const badge = document.getElementById("versionBadge");
+      if (!badge) return;
+      fetch("https://api.github.com/repos/appchamp/costco-receipts-analyzer/commits/main")
+        .then((res) => {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.json();
+        })
+        .then((data) => {
+          const date = data.commit?.committer?.date?.slice(0, 10) || "latest";
+          const sha = (data.sha || "").slice(0, 7);
+          badge.textContent = `v${date} (${sha})`;
+          if (data.html_url) badge.href = data.html_url;
+          const msg = data.commit?.message?.split("\n")[0] || "";
+          badge.title = `Commit ${sha} on ${date}: ${msg}`;
+        })
+        .catch(() => {
+          badge.textContent = "v2026.09.14";
+        });
+    })();
 
     // File input handler
     document.getElementById("fileInput").addEventListener("change", (e) => {
