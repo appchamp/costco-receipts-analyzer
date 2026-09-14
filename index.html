@@ -952,10 +952,38 @@
     }
 
     function isCouponItem(item, prevItem) {
+      if (!item) return false;
       const d1 = String(item.itemDescription01 || "").trim();
       const f1 = String(item.frenchItemDescription1 || "").trim();
-      if (d1.startsWith("/") || f1.startsWith("/")) return true;
-      if (prevItem && prevItem.itemNumber && d1.includes(String(prevItem.itemNumber))) return true;
+      const isCouponPattern = d1.startsWith("/") || f1.startsWith("/");
+      
+      // If no prevItem provided, just test if this item itself is a coupon
+      if (!prevItem) return isCouponPattern;
+
+      // prevItem cannot be a coupon itself
+      if (isCouponItem(prevItem, null)) return false;
+
+      const prevNum = String(prevItem.itemNumber || "").trim();
+      const prevDesc = String(prevItem.itemDescription01 || "").trim().toLowerCase();
+
+      // If coupon specifies a numeric item number, e.g. '/ 1967478' or '/1819571'
+      const numMatch = d1.match(/^\/\s*(\d+)/) || f1.match(/^\/\s*(\d+)/);
+      if (numMatch) {
+        return numMatch[1] === prevNum;
+      }
+
+      // If coupon specifies text description, e.g. '/ BR SHIRT'
+      const textMatch = d1.match(/^\/\s*([A-Za-z].*)/);
+      if (textMatch) {
+        const couponText = textMatch[1].trim().toLowerCase();
+        return prevDesc.includes(couponText) || couponText.includes(prevDesc);
+      }
+
+      // If coupon description includes the item number
+      if (prevNum && (d1.includes(prevNum) || f1.includes(prevNum))) {
+        return true;
+      }
+
       return false;
     }
 
