@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Costco Receipt Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Chart.js for the Monthly Spending Trend -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card-bg: #ffffff;
+      --accent: #2563eb;
+      --accent-soft: #e0edff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.05);
+      --radius-lg: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 16px 64px;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    header h1 span.icon {
+      font-size: 1.6rem;
+    }
+
+    header p {
+      margin: 4px 0 0;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .uploader {
+      padding: 10px 14px;
+      background: var(--card-bg);
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .uploader label {
+      font-weight: 600;
+    }
+
+    .uploader input[type="file"] {
+      border: none;
+      font-size: 0.9rem;
+    }
+
+    .status {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .summary-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--border);
+    }
+
+    .summary-card .label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .summary-card .value {
+      margin-top: 4px;
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    .summary-card .sub {
+      margin-top: 2px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px 14px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--border);
+    }
+
+    .card h2 {
+      margin: 0 0 6px;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card h2 .icon {
+      font-size: 1.1rem;
+    }
+
+    .card .subtitle {
+      margin: 0 0 10px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    thead {
+      background: var(--accent-soft);
+    }
+
+    th, td {
+      padding: 6px 6px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: right;
+      width: 1%;
+    }
+
+    th:last-child,
+    td:last-child {
+      text-align: right;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    tbody tr:hover {
+      background: #eef2ff;
+    }
+
+    .money {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+
+    .pos {
+      color: var(--success);
+    }
+
+    .neg {
+      color: var(--danger);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .tag-sale {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .tag-refund {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .tag-coupon {
+      background: #ede9fe;
+      color: #6d28d9;
+    }
+
+    .tag-coupon-reversal {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .row-refunded {
+      opacity: 0.6;
+      background: #f8fafc !important;
+      transition: opacity 0.2s;
+    }
+
+    .row-refunded:hover {
+      opacity: 0.95;
+      background: #f1f5f9 !important;
+    }
+
+    .row-refunded td,
+    .row-refunded td .money,
+    .row-refunded td strong,
+    .row-refunded td span:not(.tag):not(.tag-matched):not(.badge-pill) {
+      text-decoration: line-through !important;
+      color: var(--text-muted) !important;
+    }
+
+    .row-refunded td .badge-pill,
+    .row-refunded td .tag,
+    .row-refunded td .tag-matched {
+      text-decoration: none !important;
+      display: inline-flex;
+    }
+
+    .tag-matched {
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid var(--border);
+      font-size: 0.68rem;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-weight: 500;
+      text-decoration: none !important;
+      display: inline-flex;
+      align-items: center;
+      margin-top: 3px;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    /* Purchase Stats Section Styles */
+    .stats-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-kpi-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    }
+
+    .stat-kpi-card:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-soft);
+      border-color: #cbd5e1;
+    }
+
+    .stat-kpi-card .kpi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .stat-kpi-card .kpi-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .stat-kpi-card .kpi-icon {
+      font-size: 1.05rem;
+    }
+
+    .stat-kpi-card .kpi-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-kpi-card .kpi-sub {
+      margin-top: 4px;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    .stat-kpi-card.theme-purchased {
+      border-left: 4px solid #10b981;
+    }
+    .stat-kpi-card.theme-returned {
+      border-left: 4px solid #ef4444;
+    }
+    .stat-kpi-card.theme-retained {
+      border-left: 4px solid #3b82f6;
+    }
+    .stat-kpi-card.theme-effective-price {
+      border-left: 4px solid #8b5cf6;
+      background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+    }
+    .stat-kpi-card.theme-savings {
+      border-left: 4px solid #f59e0b;
+    }
+
+    .stats-details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+
+    .stats-detail-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+    }
+
+    .stats-detail-card h3 {
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0 0 10px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stats-detail-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .stats-detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+
+    .stats-detail-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .stats-detail-item .item-label {
+      color: var(--text-muted);
+    }
+
+    .stats-detail-item .item-val {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-main);
+    }
+
+    /* Filter bar & Search */
+    .filter-bar {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 14px 18px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 260px;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      font-size: 1rem;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 38px 10px 36px;
+      font-size: 0.95rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: #fafafa;
+      font-family: inherit;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      display: none;
+      padding: 2px 6px;
+      border-radius: 50%;
+      line-height: 1;
+    }
+
+    .clear-btn:hover {
+      color: var(--danger);
+      background: #fee2e2;
+    }
+
+    .filter-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .filter-badge button {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: bold;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .filter-badge button:hover {
+      color: var(--danger);
+    }
+
+    .clickable-row {
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+
+    .clickable-row:hover {
+      background: #eef2ff !important;
+    }
+
+    .clickable-row td:nth-child(2) strong {
+      color: var(--accent);
+      text-decoration: underline text-decoration-color transparent;
+      transition: text-decoration-color 0.15s;
+    }
+
+    .clickable-row:hover td:nth-child(2) strong {
+      text-decoration-color: var(--accent);
+    }
+
+    .table-scroll-container {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .table-scroll-container table thead th {
+      position: sticky;
+      top: 0;
+      background: var(--accent-soft);
+      z-index: 2;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      border: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .badge-pill strong {
+      color: var(--text-main);
+    }
+
+    .chart-wrapper {
+      margin-top: 12px;
+    }
+
+    canvas {
+      max-height: 360px;
+    }
+
+    @media (max-width: 640px) {
+      header {
+        align-items: flex-start;
+      }
+      .uploader {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+      .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <h1><span class="icon">🧾</span>Costco Receipt Dashboard</h1>
+        <p>Upload your Costco receipts JSON to see spending insights.</p>
+      </div>
+      <div>
+        <div class="uploader">
+          <label for="fileInput">Receipts JSON:</label>
+          <input id="fileInput" type="file" accept="application/json,.json" />
+        </div>
+        <div id="status" class="status">No file loaded yet.</div>
+        <button id="downloadCsv" style="display:none; margin-top: 12px; background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 99px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">Export to CSV</button>
+      </div>
+    </header>
+
+    <!-- Item Filter Bar -->
+    <section class="filter-bar" id="filterBar" style="display: none;">
+      <div class="filter-row">
+        <div class="search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input 
+            type="text" 
+            id="itemFilterInput" 
+            class="search-input" 
+            placeholder="Filter by item name or number (e.g. 1857874 or Almond)..." 
+            list="itemsDatalist"
+            autocomplete="off"
+          />
+          <button id="clearFilterBtn" class="clear-btn" title="Clear filter">✕</button>
+          <datalist id="itemsDatalist"></datalist>
+        </div>
+        <div id="activeFilterBadge" class="filter-badge" style="display: none;">
+          <span id="activeFilterText">Filtering</span>
+          <button id="badgeClearBtn" title="Clear filter">✕</button>
+        </div>
+      </div>
+      <div id="filterHelpText" style="font-size: 0.78rem; color: var(--text-muted); padding-left: 6px;">
+        💡 Tip: Type an item description or item code, or click any item in the tables below to drill down into its purchase history.
+      </div>
+    </section>
+
+    <!-- Item Purchase History Section (Visible when filter is active) -->
+    <section class="card" id="itemHistorySection" style="display: none; margin-bottom: 18px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+        <div>
+          <h2><span class="icon">📋</span><span id="itemHistoryTitle">Item Purchase History</span></h2>
+          <p class="subtitle" id="itemHistorySubtitle" style="margin: 0;">Detailed timeline of transactions matching this item.</p>
+        </div>
+        <div id="itemHistoryPills" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+      </div>
+      <div class="table-scroll-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Type</th>
+              <th>Warehouse</th>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Unit Price</th>
+              <th>Total Amount</th>
+            </tr>
+          </thead>
+          <tbody id="itemHistoryBody">
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Item Purchase Stats Section (Visible when filter is active) -->
+    <section class="card" id="itemStatsSection" style="display: none; margin-bottom: 18px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;">
+        <div>
+          <h2><span class="icon">📈</span><span id="itemStatsTitle">Purchase & Return Statistics</span></h2>
+          <p class="subtitle" id="itemStatsSubtitle" style="margin: 0;">Comprehensive breakdown of quantities, return rates, price variation, and true net cost.</p>
+        </div>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="stats-kpi-grid" id="statsKpiGrid"></div>
+
+      <!-- Detailed Breakdown Panels -->
+      <div class="stats-details-grid" id="statsDetailsGrid"></div>
+    </section>
+
+    <!-- Summary cards -->
+    <section class="summary-grid">
+      <div class="summary-card">
+        <div class="label">Total Purchases (items)</div>
+        <div class="value" id="totalPurchases">–</div>
+        <div class="sub">Total individual items bought</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Unique Items</div>
+        <div class="value" id="uniqueItems">–</div>
+        <div class="sub">Distinct Costco item codes</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Receipts</div>
+        <div class="value" id="receiptCount">–</div>
+        <div class="sub">Number of shopping trips</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Total Spent</div>
+        <div class="value" id="totalSpent">–</div>
+        <div class="sub">Including tax</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Avg Item Price</div>
+        <div class="value" id="avgItemPrice">–</div>
+        <div class="sub">Average price per purchased unit</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Avg Per Receipt</div>
+        <div class="value" id="avgPerReceipt">–</div>
+        <div class="sub">Average spend per trip</div>
+      </div>
+    </section>
+
+    <!-- Top tables -->
+    <section class="grid-2">
+      <div class="card">
+        <h2><span class="icon">💰</span>Most Total Spent Items</h2>
+        <p class="subtitle">Items you've spent the most money on overall.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Item</th>
+              <th>Total Spent</th>
+              <th>Times Bought</th>
+              <th>Avg Price</th>
+            </tr>
+          </thead>
+          <tbody id="mostTotalSpentBody">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2><span class="icon">📈</span>Biggest Price Increases</h2>
+        <p class="subtitle">Items that increased in price the most over time.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Item</th>
+              <th>Min → Max</th>
+              <th>Increase</th>
+              <th>Period</th>
+              <th>Rate / Month</th>
+            </tr>
+          </thead>
+          <tbody id="priceIncreaseBody">
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <div class="card">
+        <h2><span class="icon">💎</span>Most Expensive Items</h2>
+        <p class="subtitle">By average price (min 3 purchases).</p>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Item</th>
+              <th>Avg Price</th>
+              <th>Max Price</th>
+              <th>Purchases</th>
+            </tr>
+          </thead>
+          <tbody id="mostExpensiveBody">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2><span class="icon">🔥</span>Most Purchased Items</h2>
+        <p class="subtitle">By number of units purchased.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Item</th>
+              <th>Times Bought</th>
+              <th>Avg Price</th>
+              <th>Min → Max</th>
+              <th>Increase %</th>
+            </tr>
+          </thead>
+          <tbody id="mostPurchasedBody">
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="icon">📊</span>Monthly Spending Trend</h2>
+      <p class="subtitle">Total spent per month.</p>
+      <div class="chart-wrapper">
+        <canvas id="monthlyChart"></canvas>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const currencyFormatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    function formatMoney(v) {
+      return currencyFormatter.format(v || 0);
+    }
+
+    function escapeHtml(str) {
+      if (str == null) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function monthsBetween(d1, d2) {
+      const msPerMonth = 1000 * 60 * 60 * 24 * 30.4375;
+      return Math.abs(d2 - d1) / msPerMonth;
+    }
+
+    let currentReceipts = [];
+    let activeFilter = "";
+    let monthlyChart = null;
+
+    function extractUniqueItems(receipts) {
+      const itemMap = new Map();
+      receipts.forEach((receipt) => {
+        const items = Array.isArray(receipt.itemArray) ? receipt.itemArray : [];
+        items.forEach((item) => {
+          if (isVoidItem(item)) return;
+          const num = String(item.itemNumber || "").trim();
+          const desc1 = (item.itemDescription01 || "").trim();
+          const desc2 = (item.itemDescription02 || "").trim();
+          const name = desc1 || desc2 || num;
+          if (!num || num.startsWith("/")) return;
+
+          if (!itemMap.has(num)) {
+            itemMap.set(num, name);
+          } else if (name && (!itemMap.get(num) || itemMap.get(num) === num)) {
+            itemMap.set(num, name);
+          }
+        });
+      });
+
+      return Array.from(itemMap.entries())
+        .map(([itemNumber, name]) => ({ itemNumber, name }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    function populateDatalist(items) {
+      const dl = document.getElementById("itemsDatalist");
+      dl.innerHTML = "";
+      items.forEach((item) => {
+        const opt = document.createElement("option");
+        opt.value = `${item.name} (#${item.itemNumber})`;
+        dl.appendChild(opt);
+      });
+    }
+
+    function itemMatches(item, filterStr) {
+      if (!filterStr) return true;
+      const q = filterStr.trim().toLowerCase();
+      if (!q) return true;
+
+      // Extract raw ID if input format is "Name (#12345)" or "#12345"
+      const idMatch = q.match(/#?(\d{4,8})/);
+      const targetId = idMatch ? idMatch[1] : null;
+
+      const itemNum = String(item.itemNumber || "").trim().toLowerCase();
+      const desc1 = String(item.itemDescription01 || "").toLowerCase();
+      const desc2 = String(item.itemDescription02 || "").toLowerCase();
+
+      if (targetId && itemNum === targetId.toLowerCase()) return true;
+      if (itemNum.includes(q)) return true;
+      if (desc1.includes(q) || desc2.includes(q)) return true;
+
+      // Match coupon lines associated with this item (e.g. "/ 1857874")
+      if (targetId && (desc1.includes(targetId) || desc2.includes(targetId))) return true;
+
+      return false;
+    }
+
+    function isVoidItem(item) {
+      if (!item) return false;
+      const unit = Number(item.unit) || 0;
+      const amount = Number(item.amount) || 0;
+      return unit === 0 && amount === 0;
+    }
+
+    function isCouponItem(item, prevItem) {
+      const d1 = String(item.itemDescription01 || "").trim();
+      const f1 = String(item.frenchItemDescription1 || "").trim();
+      if (d1.startsWith("/") || f1.startsWith("/")) return true;
+      if (prevItem && prevItem.itemNumber && d1.includes(String(prevItem.itemNumber))) return true;
+      return false;
+    }
+
+    function processReceipts(receipts, filterQuery = "") {
+      const isFiltered = Boolean(filterQuery && filterQuery.trim());
+      const itemStats = new Map(); // key -> stats
+      const monthlyTotals = new Map(); // "YYYY-MM" -> total
+      let totalSpent = 0;
+      let sumItemAmounts = 0;
+      let totalUnits = 0;
+      const matchingPurchases = [];
+      const distinctReceipts = new Set();
+
+      receipts.forEach((receipt) => {
+        const items = Array.isArray(receipt.itemArray) ? receipt.itemArray : [];
+        const dateStr =
+          receipt.transactionDateTime ||
+          (receipt.transactionDate ? receipt.transactionDate + "T00:00:00" : null);
+        const trxDate = dateStr ? new Date(dateStr) : new Date();
+        const monthKey = (receipt.transactionDate || "").slice(0, 7);
+        const receiptBarcode = receipt.transactionBarcode || (receipt.transactionDate + "_" + receipt.warehouseNumber);
+        const isRefundReceipt = (receipt.transactionType || "").toLowerCase() === "refund";
+
+        if (!isFiltered) {
+          // Unfiltered: overall total comes from receipt.total
+          const rTotal = Number(receipt.total) || 0;
+          totalSpent += rTotal;
+          if (monthKey) {
+            monthlyTotals.set(monthKey, (monthlyTotals.get(monthKey) || 0) + rTotal);
+          }
+        }
+
+        // Pair coupons with preceding product items
+        const pairedCouponIndices = new Set();
+        const itemCoupons = new Map(); // product item index -> coupon item
+
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (isVoidItem(item)) continue;
+          if (i > 0 && !pairedCouponIndices.has(i - 1)) {
+            const prevItem = items[i - 1];
+            if (isCouponItem(item, prevItem)) {
+              pairedCouponIndices.add(i);
+              itemCoupons.set(i - 1, item);
+            }
+          }
+        }
+
+        let receiptHasMatchingItem = false;
+
+        items.forEach((item, idx) => {
+          if (isVoidItem(item)) return;
+
+          // If this coupon was merged into its parent item, don't output as a standalone row
+          if (pairedCouponIndices.has(idx)) return;
+
+          const attachedCoupon = itemCoupons.get(idx);
+          const isOrphanCoupon = isCouponItem(item, null);
+
+          // Check if matches
+          const matchesSelf = itemMatches(item, filterQuery);
+          const matchesCoupon = attachedCoupon && itemMatches(attachedCoupon, filterQuery);
+          const matches = matchesSelf || matchesCoupon;
+          if (!matches) return;
+
+          receiptHasMatchingItem = true;
+          const unit = Number(item.unit) || 0;
+          const baseAmount = Number(item.amount) || 0;
+          const rawName = (item.itemDescription01 || item.itemDescription02 || item.itemNumber || "").trim();
+
+          const hasCoupon = Boolean(attachedCoupon);
+          const couponAmount = hasCoupon ? (Number(attachedCoupon.amount) || 0) : 0;
+          const couponUnit = hasCoupon ? Math.abs(Number(attachedCoupon.unit) || 0) : 0;
+          const couponPerItem = hasCoupon
+            ? Math.abs(couponAmount / (couponUnit !== 0 ? couponUnit : (Math.abs(unit) || 1)))
+            : 0;
+          const netAmount = baseAmount + couponAmount;
+
+          const couponType = hasCoupon
+            ? (isRefundReceipt || couponAmount > 0 ? "Coupon Refund" : "Coupon")
+            : "";
+
+          const transactionType =
+            baseAmount < 0 || unit < 0 || (isRefundReceipt && baseAmount <= 0 && unit <= 0)
+              ? "Refund"
+              : "Sale";
+          const tagClass = transactionType === "Refund" ? "tag-refund" : "tag-sale";
+
+          const originalUnitPrice = unit !== 0 ? Math.abs(baseAmount / unit) : 0;
+          const netUnitPrice = unit !== 0 ? Math.abs(netAmount / unit) : 0;
+
+          if (isFiltered) {
+            matchingPurchases.push({
+              date: receipt.transactionDate || (dateStr ? dateStr.slice(0, 10) : ""),
+              dateTime: receipt.transactionDateTime || dateStr || "",
+              warehouse: receipt.warehouseName || receipt.warehouseShortName || "Unknown",
+              type: transactionType,
+              tagClass: tagClass,
+              itemNumber: item.itemNumber || "–",
+              name: rawName,
+              unit: unit,
+              baseAmount: baseAmount,
+              netAmount: netAmount,
+              hasCoupon: hasCoupon,
+              couponType: couponType,
+              couponDiscount: couponPerItem,
+              couponUnit: couponUnit,
+              couponTotal: Math.abs(couponAmount),
+              couponItemNumber: attachedCoupon ? attachedCoupon.itemNumber : null,
+              originalUnitPrice: originalUnitPrice,
+              netUnitPrice: netUnitPrice,
+              barcode: receiptBarcode,
+            });
+
+            totalSpent += netAmount;
+            // Only physical product units count towards product unit total
+            if (!isOrphanCoupon) {
+              totalUnits += unit;
+            }
+
+            if (monthKey) {
+              monthlyTotals.set(monthKey, (monthlyTotals.get(monthKey) || 0) + netAmount);
+            }
+          }
+
+          // Item stats for positive non-coupon purchases only
+          if (isOrphanCoupon || !item.itemNumber || unit <= 0 || baseAmount <= 0) return;
+
+          const key = item.itemNumber + "|" + (item.itemDescription01 || "").trim();
+          const effectivePrice = netUnitPrice > 0 ? netUnitPrice : originalUnitPrice;
+
+          let stat = itemStats.get(key);
+          if (!stat) {
+            stat = {
+              itemNumber: item.itemNumber,
+              name: (item.itemDescription01 || "").trim(),
+              totalSpent: 0,
+              totalUnits: 0,
+              purchases: 0,
+              prices: [], // {date, price}
+            };
+            itemStats.set(key, stat);
+          }
+
+          stat.totalSpent += netAmount > 0 ? netAmount : baseAmount;
+          stat.totalUnits += unit;
+          stat.purchases += unit;
+          stat.prices.push({ date: trxDate, price: effectivePrice });
+
+          if (!isFiltered) {
+            sumItemAmounts += netAmount > 0 ? netAmount : baseAmount;
+            totalUnits += unit;
+          }
+        });
+
+        if (receiptHasMatchingItem) {
+          distinctReceipts.add(receiptBarcode);
+        }
+      });
+
+      const receiptsCount = isFiltered ? distinctReceipts.size : receipts.length;
+      const uniqueItems = itemStats.size;
+      const avgItemPrice =
+        totalUnits > 0
+          ? (isFiltered ? totalSpent / totalUnits : sumItemAmounts / totalUnits)
+          : 0;
+      const avgPerReceipt =
+        receiptsCount > 0 ? totalSpent / receiptsCount : 0;
+
+      return {
+        itemStats,
+        monthlyTotals,
+        summary: {
+          totalSpent,
+          totalUnits,
+          receiptsCount,
+          uniqueItems,
+          avgItemPrice,
+          avgPerReceipt,
+          isFiltered,
+        },
+        matchingPurchases,
+      };
+    }
+
+    function renderSummary(summary) {
+      document.getElementById("totalPurchases").textContent =
+        summary.totalUnits.toLocaleString();
+      document.getElementById("uniqueItems").textContent =
+        summary.uniqueItems.toLocaleString();
+      document.getElementById("receiptCount").textContent =
+        summary.receiptsCount.toLocaleString();
+      document.getElementById("totalSpent").textContent =
+        formatMoney(summary.totalSpent);
+      document.getElementById("avgItemPrice").textContent =
+        formatMoney(summary.avgItemPrice);
+      document.getElementById("avgPerReceipt").textContent =
+        formatMoney(summary.avgPerReceipt);
+
+      // Contextualize labels if filtered
+      const totalSpentCard = document.getElementById("totalSpent").parentElement;
+      const receiptCard = document.getElementById("receiptCount").parentElement;
+      const purchasesCard = document.getElementById("totalPurchases").parentElement;
+      const uniqueCard = document.getElementById("uniqueItems").parentElement;
+
+      if (summary.isFiltered) {
+        totalSpentCard.querySelector(".label").textContent = "Item Total Spent";
+        totalSpentCard.querySelector(".sub").textContent = "Total spent on filtered item(s)";
+        receiptCard.querySelector(".label").textContent = "Trips with Item";
+        receiptCard.querySelector(".sub").textContent = "Receipts containing this item";
+        purchasesCard.querySelector(".label").textContent = "Net Units Bought";
+        purchasesCard.querySelector(".sub").textContent = "Units purchased minus returns";
+        uniqueCard.querySelector(".sub").textContent = "Matching distinct items";
+      } else {
+        totalSpentCard.querySelector(".label").textContent = "Total Spent";
+        totalSpentCard.querySelector(".sub").textContent = "Including tax";
+        receiptCard.querySelector(".label").textContent = "Receipts";
+        receiptCard.querySelector(".sub").textContent = "Number of shopping trips";
+        purchasesCard.querySelector(".label").textContent = "Total Purchases (items)";
+        purchasesCard.querySelector(".sub").textContent = "Total individual items bought";
+        uniqueCard.querySelector(".sub").textContent = "Distinct Costco item codes";
+      }
+    }
+
+    function solveBlendedRefund(refQty, refAmt, availableSales) {
+      const n = availableSales.length;
+      let solution = null;
+
+      function backtrack(idx, currentQty, currentAmt, currentAlloc) {
+        if (solution) return;
+        if (currentQty === refQty) {
+          if (Math.abs(currentAmt - refAmt) < 0.02) {
+            solution = [...currentAlloc];
+          }
+          return;
+        }
+        if (idx >= n || currentQty > refQty || currentAmt > refAmt + 0.05) {
+          return;
+        }
+        const item = availableSales[idx];
+        const maxPossible = Math.min(item.maxQty, refQty - currentQty);
+        for (let take = maxPossible; take >= 0; take--) {
+          currentAlloc[idx] = take;
+          backtrack(idx + 1, currentQty + take, currentAmt + take * item.price, currentAlloc);
+          if (solution) return;
+        }
+      }
+
+      backtrack(0, 0, 0, new Array(n).fill(0));
+      return solution;
+    }
+
+    function matchRefundsWithSales(matchingPurchases) {
+      // Group records by item number
+      const byItem = new Map();
+      matchingPurchases.forEach((p, idx) => {
+        p._origIndex = idx;
+        p.remainingQty = Math.abs(p.unit || 0);
+        p.matchedRecords = []; // array of { date, qty, price }
+        p.isFullyMatched = false;
+        const key = String(p.itemNumber || "").trim();
+        if (!byItem.has(key)) {
+          byItem.set(key, []);
+        }
+        byItem.get(key).push(p);
+      });
+
+      byItem.forEach((records) => {
+        // Sort chronologically (oldest first)
+        records.sort((a, b) => {
+          const dComp = (a.dateTime || a.date).localeCompare(b.dateTime || b.date);
+          if (dComp !== 0) return dComp;
+          if (a.type === "Sale" && b.type === "Refund") return -1;
+          if (a.type === "Refund" && b.type === "Sale") return 1;
+          return a._origIndex - b._origIndex;
+        });
+
+        const sales = records.filter((p) => p.type === "Sale");
+        const refunds = records.filter((p) => p.type === "Refund");
+
+        refunds.forEach((ref) => {
+          if (ref.remainingQty <= 0) return;
+
+          // Eligible sales must have occurred on or before this refund
+          const eligibleSales = sales.filter((s) => {
+            const refDt = ref.dateTime || ref.date;
+            const sDt = s.dateTime || s.date;
+            return sDt <= refDt && s.remainingQty > 0;
+          });
+
+          // Pass 1: Try exact unit-price matching (including coupon decomposition)
+          const refComponents = [];
+          if (ref.hasCoupon && ref.couponDiscount > 0) {
+            const cUnits = ref.couponUnit > 0 ? Math.min(ref.couponUnit, ref.remainingQty) : ref.remainingQty;
+            const cPrice = Math.round((ref.originalUnitPrice - ref.couponDiscount) * 100) / 100;
+            refComponents.push({ price: cPrice, qty: cUnits });
+
+            const baseUnits = ref.remainingQty - cUnits;
+            if (baseUnits > 0) {
+              const bPrice = Math.round(ref.originalUnitPrice * 100) / 100;
+              refComponents.push({ price: bPrice, qty: baseUnits });
+            }
+          } else {
+            const uPrice = Math.round(ref.netUnitPrice * 100) / 100;
+            refComponents.push({ price: uPrice, qty: ref.remainingQty });
+          }
+
+          refComponents.forEach((comp) => {
+            let needed = comp.qty;
+            const targetPrice = comp.price;
+
+            for (const s of eligibleSales) {
+              if (needed <= 0) break;
+              if (s.remainingQty <= 0) continue;
+
+              const sPrice = Math.round(s.netUnitPrice * 100) / 100;
+              if (Math.abs(sPrice - targetPrice) < 0.01) {
+                const matched = Math.min(needed, s.remainingQty);
+                needed -= matched;
+                s.remainingQty -= matched;
+                ref.remainingQty -= matched;
+
+                s.matchedRecords.push({
+                  date: ref.date,
+                  qty: matched,
+                  price: targetPrice,
+                });
+
+                ref.matchedRecords.push({
+                  date: s.date,
+                  qty: matched,
+                  price: targetPrice,
+                });
+
+                if (s.remainingQty <= 0 && Math.abs(s.unit) > 0) {
+                  s.isFullyMatched = true;
+                }
+              }
+            }
+          });
+
+          // Pass 2: If refund still has unmatched quantity, check if it's a blended return
+          // across multiple prior purchases at different prices (e.g. 2 @ $6.00 + 2 @ $7.50 = 4 @ $6.75)
+          if (ref.remainingQty > 0) {
+            const remainingRefundAmt = (Math.abs(ref.netAmount) * ref.remainingQty) / Math.abs(ref.unit);
+            const candidateSales = eligibleSales.filter((s) => s.remainingQty > 0);
+            const saleItems = candidateSales.map((s, idx) => ({
+              sale: s,
+              maxQty: s.remainingQty,
+              price: Math.round(s.netUnitPrice * 100) / 100,
+              idx: idx,
+            }));
+
+            const allocation = solveBlendedRefund(ref.remainingQty, remainingRefundAmt, saleItems);
+            if (allocation) {
+              allocation.forEach((takeQty, idx) => {
+                if (takeQty > 0) {
+                  const s = saleItems[idx].sale;
+                  const sPrice = saleItems[idx].price;
+
+                  s.remainingQty -= takeQty;
+                  ref.remainingQty -= takeQty;
+
+                  s.matchedRecords.push({
+                    date: ref.date,
+                    qty: takeQty,
+                    price: sPrice,
+                  });
+
+                  ref.matchedRecords.push({
+                    date: s.date,
+                    qty: takeQty,
+                    price: sPrice,
+                  });
+
+                  if (s.remainingQty <= 0 && Math.abs(s.unit) > 0) {
+                    s.isFullyMatched = true;
+                  }
+                }
+              });
+            }
+          }
+
+          if (ref.remainingQty <= 0 && Math.abs(ref.unit) > 0 && ref.matchedRecords.length > 0) {
+            ref.isFullyMatched = true;
+          }
+        });
+      });
+    }
+
+    function renderItemHistory(matchingPurchases, filterQuery) {
+      const historySection = document.getElementById("itemHistorySection");
+      const tbody = document.getElementById("itemHistoryBody");
+      const titleEl = document.getElementById("itemHistoryTitle");
+      const subtitleEl = document.getElementById("itemHistorySubtitle");
+      const pillsContainer = document.getElementById("itemHistoryPills");
+
+      if (!filterQuery || !filterQuery.trim()) {
+        historySection.style.display = "none";
+        tbody.innerHTML = "";
+        pillsContainer.innerHTML = "";
+        return;
+      }
+
+      historySection.style.display = "block";
+      tbody.innerHTML = "";
+      pillsContainer.innerHTML = "";
+
+      if (matchingPurchases.length === 0) {
+        titleEl.textContent = `Purchase History: "${filterQuery}"`;
+        subtitleEl.textContent = "No matching purchases or refunds found.";
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">No records found matching &ldquo;${escapeHtml(filterQuery)}&rdquo;. Try another item name or code.</td></tr>`;
+        return;
+      }
+
+      // Run refund-to-sales matching
+      matchRefundsWithSales(matchingPurchases);
+
+      // Sort newest first
+      const sorted = [...matchingPurchases].sort((a, b) => {
+        return (b.dateTime || b.date).localeCompare(a.dateTime || a.date);
+      });
+
+      titleEl.textContent = `Purchase History for "${filterQuery}"`;
+      subtitleEl.textContent = `Found ${sorted.length} transaction record${sorted.length === 1 ? "" : "s"}.`;
+
+      // Quick summary pills
+      let totalUnits = 0;
+      let totalSpent = 0;
+      let refundsCount = 0;
+      let salesCount = 0;
+      let couponsCount = 0;
+      let couponRefundsCount = 0;
+      let totalCouponSavings = 0;
+      let matchedRefundsCount = 0;
+      let prices = [];
+
+      sorted.forEach((p) => {
+        totalSpent += p.netAmount;
+        totalUnits += p.unit;
+        if (p.type === "Refund") {
+          refundsCount++;
+          if (p.isFullyMatched) {
+            matchedRefundsCount++;
+          }
+        } else {
+          salesCount++;
+          if (p.unit > 0 && p.netUnitPrice > 0) {
+            prices.push(p.netUnitPrice);
+          }
+        }
+        if (p.hasCoupon) {
+          if (p.couponType === "Coupon Refund") {
+            couponRefundsCount++;
+          } else {
+            couponsCount++;
+            totalCouponSavings += (p.couponTotal || p.couponDiscount);
+          }
+        }
+      });
+
+      let priceRangeText = "–";
+      if (prices.length > 0) {
+        const minP = Math.min(...prices);
+        const maxP = Math.max(...prices);
+        priceRangeText = minP === maxP ? formatMoney(minP) : `${formatMoney(minP)} – ${formatMoney(maxP)}`;
+      }
+
+      pillsContainer.innerHTML = `
+        <span class="badge-pill">Purchases: <strong>${salesCount}</strong></span>
+        ${refundsCount > 0 ? `<span class="badge-pill" style="color: var(--danger);">Refunds: <strong>${refundsCount}</strong></span>` : ""}
+        ${matchedRefundsCount > 0 ? `<span class="badge-pill" style="color: #0284c7;">Matched: <strong>${matchedRefundsCount}</strong></span>` : ""}
+        ${(couponsCount + couponRefundsCount) > 0 ? `<span class="badge-pill" style="color: #6d28d9;">Coupons: <strong>${couponsCount + couponRefundsCount}</strong></span>` : ""}
+        <span class="badge-pill">Net Units: <strong>${totalUnits}</strong></span>
+        <span class="badge-pill">Net Spend: <strong>${formatMoney(totalSpent)}</strong></span>
+        <span class="badge-pill">Price Range: <strong>${priceRangeText}</strong></span>
+      `;
+
+      sorted.forEach((p) => {
+        const tr = document.createElement("tr");
+        if (p.isFullyMatched) {
+          tr.className = "row-refunded";
+        }
+
+        // Format date and time
+        let formattedDate = p.date || "–";
+        if (p.dateTime && p.dateTime.includes("T")) {
+          const parts = p.dateTime.split("T");
+          formattedDate = parts[0] + " " + parts[1].slice(0, 5);
+        }
+
+        let couponBadge = "";
+        if (p.hasCoupon) {
+          couponBadge = ` <span class="tag tag-coupon" style="font-size: 0.68rem; margin-left: 4px;">🏷️ (${formatMoney(p.couponDiscount)} coupon)</span>`;
+        }
+
+        let matchedBadge = "";
+        if (p.matchedRecords && p.matchedRecords.length > 0) {
+          const uniqueDates = [...new Set(p.matchedRecords.map((m) => m.date))];
+          const totalMatched = p.matchedRecords.reduce((sum, m) => sum + m.qty, 0);
+          const totalQty = Math.abs(p.unit);
+
+          if (p.type === "Sale") {
+            const breakdown = p.matchedRecords.map((m) => `${m.qty} unit${m.qty === 1 ? '' : 's'} on ${m.date}`).join(', ');
+            if (p.isFullyMatched) {
+              matchedBadge = `<span class="tag-matched" title="Refunded: ${breakdown}">↩️ Refunded on ${uniqueDates.join(', ')}</span>`;
+            } else {
+              matchedBadge = `<span class="tag-matched" title="${totalMatched} of ${totalQty} units refunded (${breakdown})">↩️ ${totalMatched}/${totalQty} refunded on ${uniqueDates.join(', ')}</span>`;
+            }
+          } else {
+            // Refund
+            const breakdown = p.matchedRecords.map((m) => `${m.qty} unit${m.qty === 1 ? '' : 's'} @ ${formatMoney(m.price)} (${m.date})`).join(', ');
+            if (p.isFullyMatched) {
+              matchedBadge = `<span class="tag-matched" title="Matched to: ${breakdown}">✓ Matched to ${uniqueDates.join(', ')} sale${uniqueDates.length > 1 ? 's' : ''}</span>`;
+            } else {
+              matchedBadge = `<span class="tag-matched" title="Matched ${totalMatched} of ${totalQty} units to: ${breakdown}">✓ Matched ${totalMatched}/${totalQty} to ${uniqueDates.join(', ')}</span>`;
+            }
+          }
+        }
+
+        const itemHtml = `<strong>${escapeHtml(p.name)}</strong>${couponBadge}<br/><span class="status">#${escapeHtml(p.itemNumber)}</span>`;
+
+        let unitPriceHtml = "";
+        if (p.hasCoupon && Math.abs(p.netUnitPrice - p.originalUnitPrice) > 0.005) {
+          unitPriceHtml = `<span class="money">${formatMoney(p.netUnitPrice)}</span> <span class="status" style="text-decoration: line-through; font-size: 0.72rem; margin-left: 2px;">${formatMoney(p.originalUnitPrice)}</span>`;
+        } else {
+          unitPriceHtml = `<span class="money">${formatMoney(p.netUnitPrice)}</span>`;
+        }
+
+        const qtyDisplay = p.unit > 0 ? "+" + p.unit : p.unit;
+        const amountClass = p.netAmount < 0 ? "money neg" : "money pos";
+
+        tr.innerHTML = `
+          <td>${escapeHtml(formattedDate)}</td>
+          <td>
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
+              <span class="tag ${p.tagClass}">${escapeHtml(p.type)}</span>
+              ${matchedBadge}
+            </div>
+          </td>
+          <td><strong>${escapeHtml(p.warehouse)}</strong></td>
+          <td>${itemHtml}</td>
+          <td style="text-align: right; font-variant-numeric: tabular-nums;">${qtyDisplay}</td>
+          <td style="text-align: right;">${unitPriceHtml}</td>
+          <td class="${amountClass}" style="text-align: right;">${formatMoney(p.netAmount)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderItemStats(matchingPurchases, filterQuery) {
+      const statsSection = document.getElementById("itemStatsSection");
+      const kpiGrid = document.getElementById("statsKpiGrid");
+      const detailsGrid = document.getElementById("statsDetailsGrid");
+      const titleEl = document.getElementById("itemStatsTitle");
+      const subtitleEl = document.getElementById("itemStatsSubtitle");
+
+      if (!filterQuery || !filterQuery.trim() || !matchingPurchases || matchingPurchases.length === 0) {
+        if (statsSection) statsSection.style.display = "none";
+        if (kpiGrid) kpiGrid.innerHTML = "";
+        if (detailsGrid) detailsGrid.innerHTML = "";
+        return;
+      }
+
+      statsSection.style.display = "block";
+      titleEl.textContent = `Purchase & Return Statistics for "${filterQuery}"`;
+
+      let totalPurchasedUnits = 0;
+      let totalPurchasedSpend = 0;
+      let salesCount = 0;
+
+      let totalRefundedUnits = 0;
+      let totalRefundedAmount = 0;
+      let refundsCount = 0;
+      let matchedRefundsCount = 0;
+
+      let retainedUnits = 0;
+      let retainedSpend = 0;
+
+      let totalCouponSavings = 0;
+      let couponsCount = 0;
+
+      const prices = [];
+      const warehouses = new Set();
+      const dates = [];
+
+      matchingPurchases.forEach((p) => {
+        if (p.warehouse && p.warehouse !== "Unknown") warehouses.add(p.warehouse);
+        if (p.date) dates.push(p.date);
+
+        if (p.type === "Sale") {
+          salesCount++;
+          totalPurchasedUnits += p.unit;
+          totalPurchasedSpend += p.netAmount;
+          if (p.remainingQty > 0) {
+            retainedUnits += p.remainingQty;
+            retainedSpend += p.remainingQty * p.netUnitPrice;
+          }
+          if (p.netUnitPrice > 0) {
+            prices.push({ price: p.netUnitPrice, date: p.date, warehouse: p.warehouse });
+          }
+        } else if (p.type === "Refund") {
+          refundsCount++;
+          const absU = Math.abs(p.unit);
+          totalRefundedUnits += absU;
+          totalRefundedAmount += Math.abs(p.netAmount);
+          if (p.isFullyMatched) matchedRefundsCount++;
+        }
+
+        if (p.hasCoupon) {
+          couponsCount++;
+          totalCouponSavings += (p.couponTotal || p.couponDiscount);
+        }
+      });
+
+      const netSpend = totalPurchasedSpend - totalRefundedAmount;
+      const returnRate = totalPurchasedUnits > 0
+        ? ((totalRefundedUnits / totalPurchasedUnits) * 100).toFixed(1)
+        : 0;
+
+      const grossAvgPrice = totalPurchasedUnits > 0
+        ? totalPurchasedSpend / totalPurchasedUnits
+        : 0;
+
+      // Key metric: Average price per item after cancelling refunds with purchases
+      let avgRetainedPriceText = "–";
+      let avgPriceSub = "";
+      if (retainedUnits > 0) {
+        const avgRetained = retainedSpend / retainedUnits;
+        avgRetainedPriceText = formatMoney(avgRetained);
+        if (grossAvgPrice > 0 && Math.abs(avgRetained - grossAvgPrice) > 0.005) {
+          const diff = avgRetained - grossAvgPrice;
+          const diffPct = ((diff / grossAvgPrice) * 100).toFixed(1);
+          avgPriceSub = `Was ${formatMoney(grossAvgPrice)} before returns (${diff > 0 ? "+" : ""}${diffPct}%)`;
+        } else {
+          avgPriceSub = `Net cost per retained item`;
+        }
+      } else if (totalPurchasedUnits > 0 && totalRefundedUnits >= totalPurchasedUnits) {
+        avgRetainedPriceText = "$0.00";
+        avgPriceSub = "100% of purchased items returned";
+      } else {
+        avgPriceSub = "No units retained";
+      }
+
+      // Price extremes
+      let minPriceObj = null;
+      let maxPriceObj = null;
+      if (prices.length > 0) {
+        prices.sort((a, b) => a.price - b.price);
+        minPriceObj = prices[0];
+        maxPriceObj = prices[prices.length - 1];
+      }
+
+      // Date span
+      dates.sort();
+      const firstDate = dates[0] || "–";
+      const latestDate = dates[dates.length - 1] || "–";
+      let timespanText = "";
+      if (dates.length > 1 && firstDate !== latestDate) {
+        const d1 = new Date(firstDate);
+        const d2 = new Date(latestDate);
+        const diffDays = Math.round(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24));
+        if (diffDays >= 30) {
+          timespanText = `${(diffDays / 30.4).toFixed(1)} months (${diffDays} days)`;
+        } else {
+          timespanText = `${diffDays} days`;
+        }
+      } else {
+        timespanText = "Single trip";
+      }
+
+      subtitleEl.textContent = `${totalPurchasedUnits} purchased, ${totalRefundedUnits} returned (${retainedUnits} kept) · Net spend: ${formatMoney(netSpend)}`;
+
+      // Render 5 KPI Cards
+      kpiGrid.innerHTML = `
+        <div class="stat-kpi-card theme-purchased">
+          <div class="kpi-header">
+            <span class="kpi-label">Items Purchased</span>
+            <span class="kpi-icon">🛒</span>
+          </div>
+          <div class="kpi-value">${totalPurchasedUnits} <span style="font-size: 0.9rem; font-weight: 500;">units</span></div>
+          <div class="kpi-sub">${formatMoney(totalPurchasedSpend)} gross (${salesCount} purchase trip${salesCount === 1 ? "" : "s"})</div>
+        </div>
+
+        <div class="stat-kpi-card theme-returned">
+          <div class="kpi-header">
+            <span class="kpi-label">Items Returned</span>
+            <span class="kpi-icon">↩️</span>
+          </div>
+          <div class="kpi-value">${totalRefundedUnits} <span style="font-size: 0.9rem; font-weight: 500;">units</span></div>
+          <div class="kpi-sub">${formatMoney(totalRefundedAmount)} refunded (${returnRate}% return rate)</div>
+        </div>
+
+        <div class="stat-kpi-card theme-retained">
+          <div class="kpi-header">
+            <span class="kpi-label">Net Retained</span>
+            <span class="kpi-icon">📦</span>
+          </div>
+          <div class="kpi-value">${retainedUnits} <span style="font-size: 0.9rem; font-weight: 500;">units</span></div>
+          <div class="kpi-sub">${formatMoney(netSpend)} net total spend</div>
+        </div>
+
+        <div class="stat-kpi-card theme-effective-price">
+          <div class="kpi-header">
+            <span class="kpi-label" style="color: #6d28d9;">Avg Price (After Returns)</span>
+            <span class="kpi-icon">🏷️</span>
+          </div>
+          <div class="kpi-value" style="color: #6d28d9;">${avgRetainedPriceText}</div>
+          <div class="kpi-sub">${avgPriceSub}</div>
+        </div>
+
+        <div class="stat-kpi-card theme-savings">
+          <div class="kpi-header">
+            <span class="kpi-label">Coupon Savings</span>
+            <span class="kpi-icon">✨</span>
+          </div>
+          <div class="kpi-value">${formatMoney(totalCouponSavings)}</div>
+          <div class="kpi-sub">${couponsCount > 0 ? `${couponsCount} coupon${couponsCount === 1 ? "" : "s"} applied` : "No coupons used"}</div>
+        </div>
+      `;
+
+      // Render Detailed Breakdown Panels
+      const minPriceDisplay = minPriceObj ? `${formatMoney(minPriceObj.price)} <span style="font-size: 0.72rem; color: var(--text-muted);">(${minPriceObj.date})</span>` : "–";
+      const maxPriceDisplay = maxPriceObj ? `${formatMoney(maxPriceObj.price)} <span style="font-size: 0.72rem; color: var(--text-muted);">(${maxPriceObj.date})</span>` : "–";
+      const priceSpreadDisplay = (minPriceObj && maxPriceObj && Math.abs(minPriceObj.price - maxPriceObj.price) > 0.005)
+        ? `${formatMoney(maxPriceObj.price - minPriceObj.price)} <span style="font-size: 0.72rem; color: var(--text-muted);">(${(((maxPriceObj.price - minPriceObj.price) / minPriceObj.price) * 100).toFixed(0)}% swing)</span>`
+        : "None (flat price)";
+
+      const warehousesArray = Array.from(warehouses);
+      const warehousesDisplay = warehousesArray.length > 0 ? warehousesArray.join(", ") : "–";
+
+      detailsGrid.innerHTML = `
+        <div class="stats-detail-card">
+          <h3><span>🏷️</span> Pricing & Cost Intelligence</h3>
+          <div class="stats-detail-list">
+            <div class="stats-detail-item">
+              <span class="item-label">Avg Price (After Cancelling Returns)</span>
+              <span class="item-val" style="color: #6d28d9; font-weight: 700;">${avgRetainedPriceText}</span>
+            </div>
+            <div class="stats-detail-item">
+              <span class="item-label">Original Avg Purchase Price</span>
+              <span class="item-val">${formatMoney(grossAvgPrice)}</span>
+            </div>
+            <div class="stats-detail-item">
+              <span class="item-label">Lowest Price Paid</span>
+              <span class="item-val">${minPriceDisplay}</span>
+            </div>
+            <div class="stats-detail-item">
+              <span class="item-label">Highest Price Paid</span>
+              <span class="item-val">${maxPriceDisplay}</span>
+            </div>
+            <div class="stats-detail-item">
+              <span class="item-label">Price Variation</span>
+              <span class="item-val">${priceSpreadDisplay}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-detail-card">
+          <h3><span>🔄</span> Returns & Activity Breakdown</h3>
+          <div class="stats-detail-list">
+            <div class="stats-detail-item">
+              <span class="item-label">Units Kept vs Returned</span>
+              <span class="item-val">${retainedUnits} kept / ${totalRefundedUnits} returned</span>
+            </div>
+            <div class="stats-detail-item">
+              <span class="item-label">Return Frequency</span>
+              <span class="item-val">${returnRate}% (${refundsCount} refund trip${refundsCount === 1 ? "" : "s"})</span>
+            </div>
+            <div class="stats-detail-item">
+              <span class="item-label">Matched Refunds</span>
+              <span class="item-val">${matchedRefundsCount} of ${refundsCount} paired with purchases</span>
+            </div>
+            <div class="stats-detail-item">
+              <span class="item-label">Warehouses Visited</span>
+              <span class="item-val">${escapeHtml(warehousesDisplay)}</span>
+            </div>
+            <div class="stats-detail-item">
+              <span class="item-label">Date Range & Timespan</span>
+              <span class="item-val">${firstDate} → ${latestDate} (${timespanText})</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMostTotalSpent(itemStats) {
+      const tbody = document.getElementById("mostTotalSpentBody");
+      tbody.innerHTML = "";
+
+      const rows = Array.from(itemStats.values())
+        .sort((a, b) => b.totalSpent - a.totalSpent)
+        .slice(0, 10);
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No items to display.</td></tr>`;
+        return;
+      }
+
+      rows.forEach((row, idx) => {
+        const tr = document.createElement("tr");
+        tr.className = "clickable-row";
+        tr.title = `Click to filter by ${row.name} (#${row.itemNumber})`;
+        tr.onclick = () => setFilter(row.itemNumber);
+
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td><strong>${escapeHtml(row.name)}</strong><br/><span class="status">#${escapeHtml(row.itemNumber)}</span></td>
+          <td class="money">${formatMoney(row.totalSpent)}</td>
+          <td>${row.purchases}×</td>
+          <td class="money">${formatMoney(row.totalSpent / row.purchases)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderMostPurchased(itemStats) {
+      const tbody = document.getElementById("mostPurchasedBody");
+      tbody.innerHTML = "";
+
+      const rows = Array.from(itemStats.values())
+        .sort((a, b) => b.purchases - a.purchases)
+        .slice(0, 10);
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No items to display.</td></tr>`;
+        return;
+      }
+
+      rows.forEach((row, idx) => {
+        const tr = document.createElement("tr");
+        tr.className = "clickable-row";
+        tr.title = `Click to filter by ${row.name} (#${row.itemNumber})`;
+        tr.onclick = () => setFilter(row.itemNumber);
+
+        let min = Infinity;
+        let max = -Infinity;
+        row.prices.forEach((p) => {
+          if (p.price < min) min = p.price;
+          if (p.price > max) max = p.price;
+        });
+
+        const incPct = min > 0 ? ((max - min) / min) * 100 : 0;
+
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td><strong>${escapeHtml(row.name)}</strong><br/><span class="status">#${escapeHtml(row.itemNumber)}</span></td>
+          <td>${row.purchases}×</td>
+          <td class="money">${formatMoney(row.totalSpent / row.purchases)}</td>
+          <td class="money">${formatMoney(min)} → ${formatMoney(max)}</td>
+          <td class="${incPct > 0 ? "pos" : "status"}">${incPct > 0 ? "+" + incPct.toFixed(1) + "%" : "0%"}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderMostExpensive(itemStats) {
+      const tbody = document.getElementById("mostExpensiveBody");
+      tbody.innerHTML = "";
+
+      const rows = Array.from(itemStats.values())
+        .filter((s) => s.purchases >= (activeFilter ? 1 : 3))
+        .map((s) => {
+          const avg = s.totalSpent / s.purchases;
+          const max = s.prices.reduce((m, p) => Math.max(m, p.price), 0);
+          return { ...s, avgPrice: avg, maxPrice: max };
+        })
+        .sort((a, b) => b.avgPrice - a.avgPrice)
+        .slice(0, 10);
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No items with qualifying purchases.</td></tr>`;
+        return;
+      }
+
+      rows.forEach((row, idx) => {
+        const tr = document.createElement("tr");
+        tr.className = "clickable-row";
+        tr.title = `Click to filter by ${row.name} (#${row.itemNumber})`;
+        tr.onclick = () => setFilter(row.itemNumber);
+
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td><strong>${escapeHtml(row.name)}</strong><br/><span class="status">#${escapeHtml(row.itemNumber)}</span></td>
+          <td class="money">${formatMoney(row.avgPrice)}</td>
+          <td class="money">${formatMoney(row.maxPrice)}</td>
+          <td>${row.purchases}×</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderPriceIncreases(itemStats) {
+      const tbody = document.getElementById("priceIncreaseBody");
+      tbody.innerHTML = "";
+
+      const rows = [];
+
+      itemStats.forEach((s) => {
+        if (s.prices.length < 2) return;
+
+        let minPrice = Infinity;
+        let maxPrice = -Infinity;
+        let minDate = null;
+        let maxDate = null;
+
+        s.prices.forEach((p) => {
+          if (p.price < minPrice) {
+            minPrice = p.price;
+            minDate = p.date;
+          }
+          if (p.price > maxPrice) {
+            maxPrice = p.price;
+            maxDate = p.date;
+          }
+        });
+
+        const increase = maxPrice - minPrice;
+        if (increase <= 0.01 || !minDate || !maxDate) return;
+
+        const months = monthsBetween(minDate, maxDate);
+        if (months < 0.01) return;
+        if (["155", "712309"].includes(String(s.itemNumber))) return;
+
+        rows.push({
+          name: s.name,
+          itemNumber: s.itemNumber,
+          minPrice,
+          maxPrice,
+          increase,
+          months,
+          ratePerMonth: increase / months,
+        });
+      });
+
+      const sortedRows = rows
+        .sort((a, b) => b.increase - a.increase)
+        .slice(0, 10);
+
+      if (sortedRows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No price increases detected.</td></tr>`;
+        return;
+      }
+
+      sortedRows.forEach((row, idx) => {
+        const tr = document.createElement("tr");
+        tr.className = "clickable-row";
+        tr.title = `Click to filter by ${row.name} (#${row.itemNumber})`;
+        tr.onclick = () => setFilter(row.itemNumber);
+
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td><strong>${escapeHtml(row.name)}</strong><br/><span class="status">#${escapeHtml(row.itemNumber)}</span></td>
+          <td class="money">${formatMoney(row.minPrice)} → ${formatMoney(row.maxPrice)}</td>
+          <td class="money pos">+${formatMoney(row.increase)}</td>
+          <td>${row.months.toFixed(1)} months</td>
+          <td class="money pos">+${formatMoney(row.ratePerMonth)}/mo</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderMonthlyChart(monthlyTotals, isFiltered, filterQuery) {
+      const ctx = document.getElementById("monthlyChart").getContext("2d");
+      const chartCard = document.getElementById("monthlyChart").closest(".card");
+      const subtitleEl = chartCard ? chartCard.querySelector(".subtitle") : null;
+
+      if (subtitleEl) {
+        subtitleEl.textContent = isFiltered
+          ? `Monthly spending on "${filterQuery}".`
+          : "Total spent per month across all receipts.";
+      }
+
+      const entries = Array.from(monthlyTotals.entries()).sort((a, b) =>
+        a[0] < b[0] ? -1 : 1
+      );
+      const labels = entries.map(([m]) => m);
+      const data = entries.map(([, v]) => v);
+
+      if (monthlyChart) {
+        monthlyChart.destroy();
+      }
+
+      monthlyChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: isFiltered ? `Spent on "${filterQuery}" ($)` : "Amount Spent ($)",
+              data,
+              backgroundColor: isFiltered ? "rgba(37, 99, 235, 0.85)" : "rgba(37, 99, 235, 0.6)",
+              borderColor: "#2563eb",
+              borderWidth: 1,
+              borderRadius: 4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function (value) {
+                  return "$" + value;
+                },
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              display: isFiltered,
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return (
+                    (context.dataset.label || "Spent") +
+                    ": " +
+                    formatMoney(context.parsed.y)
+                  );
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+
+    function exportToCSV() {
+      if (!currentReceipts.length) return;
+
+      const preferredOrder = [
+        "transactionDate",
+        "itemNumber",
+        "unit",
+        "itemDescription01",
+        "itemDescription02",
+        "amount",
+        "warehouseName",
+        "transactionBarcode",
+        "total",
+      ];
+
+      const allKeysSet = new Set();
+      currentReceipts.forEach((receipt) => {
+        Object.keys(receipt).forEach((k) => {
+          if (["itemArray", "tenderArray", "couponArray", "subTaxes"].includes(k)) return;
+          if (typeof receipt[k] !== "object" || receipt[k] === null) allKeysSet.add(k);
+        });
+        (receipt.itemArray || []).forEach((item) => {
+          Object.keys(item).forEach((k) => allKeysSet.add(k));
+        });
+      });
+
+      const headers = preferredOrder.filter((k) => allKeysSet.has(k));
+      const remaining = Array.from(allKeysSet)
+        .filter((k) => !preferredOrder.includes(k))
+        .sort();
+      headers.push(...remaining);
+
+      let csvRows = [headers.join(",")];
+
+      currentReceipts.forEach((receipt) => {
+        (receipt.itemArray || []).forEach((item) => {
+          if (isVoidItem(item)) return;
+          if (activeFilter && !itemMatches(item, activeFilter)) return;
+          const row = headers.map((k) => {
+            const val = item.hasOwnProperty(k) ? item[k] : receipt[k];
+            return `"${(val ?? "").toString().replace(/"/g, '""')}"`;
+          });
+          csvRows.push(row.join(","));
+        });
+      });
+
+      const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      const filenameSuffix = activeFilter ? `_${activeFilter.replace(/[^a-zA-Z0-9]/g, "_")}` : "";
+      link.setAttribute(
+        "download",
+        `costco_export${filenameSuffix}_${new Date().toISOString().slice(0, 10)}.csv`
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function refreshDashboard() {
+      if (!currentReceipts.length) return;
+
+      const { itemStats, monthlyTotals, summary, matchingPurchases } =
+        processReceipts(currentReceipts, activeFilter);
+
+      renderSummary(summary);
+      renderItemHistory(matchingPurchases, activeFilter);
+      renderItemStats(matchingPurchases, activeFilter);
+      renderMostTotalSpent(itemStats);
+      renderMostPurchased(itemStats);
+      renderMostExpensive(itemStats);
+      renderPriceIncreases(itemStats);
+      renderMonthlyChart(monthlyTotals, summary.isFiltered, activeFilter);
+    }
+
+    function updateFilterUI() {
+      const input = document.getElementById("itemFilterInput");
+      const clearBtn = document.getElementById("clearFilterBtn");
+      const badge = document.getElementById("activeFilterBadge");
+      const badgeText = document.getElementById("activeFilterText");
+      const downloadBtn = document.getElementById("downloadCsv");
+
+      if (activeFilter) {
+        clearBtn.style.display = "block";
+        badge.style.display = "inline-flex";
+        badgeText.textContent = `Filtered: "${activeFilter}"`;
+        downloadBtn.textContent = `Export Filtered CSV`;
+      } else {
+        clearBtn.style.display = "none";
+        badge.style.display = "none";
+        downloadBtn.textContent = `Export to CSV`;
+      }
+      input.value = activeFilter;
+    }
+
+    function setFilter(query) {
+      activeFilter = (query || "").trim();
+      updateFilterUI();
+      refreshDashboard();
+      if (activeFilter) {
+        const hist = document.getElementById("itemHistorySection");
+        if (hist) {
+          hist.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    }
+
+    function clearFilter() {
+      activeFilter = "";
+      updateFilterUI();
+      refreshDashboard();
+    }
+
+    function handleData(receipts) {
+      currentReceipts = receipts;
+      document.getElementById("downloadCsv").style.display = "block";
+      document.getElementById("filterBar").style.display = "block";
+
+      const uniqueItems = extractUniqueItems(receipts);
+      populateDatalist(uniqueItems);
+
+      activeFilter = "";
+      updateFilterUI();
+      refreshDashboard();
+    }
+
+    // Event Listeners
+    let filterDebounceTimer = null;
+    const itemFilterInput = document.getElementById("itemFilterInput");
+
+    itemFilterInput.addEventListener("input", (e) => {
+      clearTimeout(filterDebounceTimer);
+      filterDebounceTimer = setTimeout(() => {
+        activeFilter = e.target.value.trim();
+        updateFilterUI();
+        refreshDashboard();
+      }, 150);
+    });
+
+    itemFilterInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        clearFilter();
+      }
+    });
+
+    document.getElementById("clearFilterBtn").addEventListener("click", clearFilter);
+    document.getElementById("badgeClearBtn").addEventListener("click", clearFilter);
+    document.getElementById("downloadCsv").addEventListener("click", exportToCSV);
+
+    // File input handler
+    document.getElementById("fileInput").addEventListener("change", (e) => {
+      const statusEl = document.getElementById("status");
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const json = JSON.parse(event.target.result);
+          if (!Array.isArray(json)) {
+            throw new Error("Expected the JSON to be an array of receipts.");
+          }
+          statusEl.textContent = `Loaded ${json.length.toLocaleString()} receipts.`;
+          statusEl.classList.remove("error");
+          handleData(json);
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = "Error reading file: " + err.message;
+          statusEl.classList.add("error");
+        }
+      };
+      reader.readAsText(file);
+    });
+  </script>
+</body>
+</html>
