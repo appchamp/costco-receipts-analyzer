@@ -903,20 +903,43 @@
       const q = filterStr.trim().toLowerCase();
       if (!q) return true;
 
-      // Extract raw ID if input format is "Name (#12345)" or "#12345"
-      const idMatch = q.match(/#?(\d{4,8})/);
-      const targetId = idMatch ? idMatch[1] : null;
-
       const itemNum = String(item.itemNumber || "").trim().toLowerCase();
       const desc1 = String(item.itemDescription01 || "").toLowerCase();
       const desc2 = String(item.itemDescription02 || "").toLowerCase();
 
-      if (targetId && itemNum === targetId.toLowerCase()) return true;
-      if (itemNum.includes(q)) return true;
+      // 1. Check for explicit item number in parentheses: e.g. "ORG BANANAS (#2619)" or "(#2619)"
+      const parenthesizedIdMatch = q.match(/\(#?(\d+)\)/);
+      if (parenthesizedIdMatch) {
+        const targetId = parenthesizedIdMatch[1].toLowerCase();
+        if (itemNum === targetId) return true;
+        const couponMatch = desc1.match(/^\/\s*(\d+)/);
+        if (couponMatch && couponMatch[1] === targetId) return true;
+        return false;
+      }
+
+      // 2. Check if the query is purely an item number (e.g. "2619" or "#2619")
+      const pureIdMatch = q.match(/^#?(\d+)$/);
+      if (pureIdMatch) {
+        const targetId = pureIdMatch[1].toLowerCase();
+        if (itemNum === targetId) return true;
+        const couponMatch = desc1.match(/^\/\s*(\d+)/);
+        if (couponMatch && couponMatch[1] === targetId) return true;
+        return false;
+      }
+
+      // 3. General text query: match against product description
       if (desc1.includes(q) || desc2.includes(q)) return true;
 
-      // Match coupon lines associated with this item (e.g. "/ 1857874")
-      if (targetId && (desc1.includes(targetId) || desc2.includes(targetId))) return true;
+      // 4. Multi-word queries: all terms must match description or exact item number
+      const terms = q.split(/\s+/).filter(Boolean);
+      if (terms.length > 1) {
+        const allTermsMatch = terms.every((term) => {
+          const termIdMatch = term.match(/^#?(\d+)$/);
+          if (termIdMatch && itemNum === termIdMatch[1]) return true;
+          return desc1.includes(term) || desc2.includes(term);
+        });
+        if (allTermsMatch) return true;
+      }
 
       return false;
     }
