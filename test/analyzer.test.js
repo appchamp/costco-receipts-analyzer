@@ -276,3 +276,56 @@ describe('7. Mobile Portrait & Responsive Layout Integrity', () => {
     assert.ok(htmlContent.includes('overflow-x: hidden'), 'Must include overflow-x: hidden to prevent horizontal page scrolling');
   });
 });
+
+describe('8. Expandable Ranking Lists', () => {
+  test('Table footer elements exist for all 4 top ranking cards', () => {
+    const requiredFooters = [
+      'mostTotalSpentFooter',
+      'priceIncreaseFooter',
+      'mostExpensiveFooter',
+      'mostPurchasedFooter'
+    ];
+    for (const id of requiredFooters) {
+      assert.ok(htmlContent.includes(`id="${id}"`), `Must contain footer element with id="${id}"`);
+    }
+  });
+
+  test('setListLimit and renderTableFooter functions exist in script context', () => {
+    assert.equal(typeof sandboxContext.setListLimit, 'function', 'setListLimit must be a function');
+    assert.equal(typeof sandboxContext.renderTableFooter, 'function', 'renderTableFooter must be a function');
+  });
+
+  test('renderTableFooter generates expand buttons when totalCount > 10', () => {
+    let capturedHtml = '';
+    const mockFooter = {
+      style: {},
+      set innerHTML(val) { capturedHtml = val; },
+      get innerHTML() { return capturedHtml; }
+    };
+
+    const origGetById = sandboxContext.document.getElementById;
+    sandboxContext.document.getElementById = (id) => {
+      if (id === 'testFooter') return mockFooter;
+      return origGetById(id);
+    };
+
+    // When total is <= 10: no expand buttons needed
+    sandboxContext.renderTableFooter('testFooter', 'mostTotalSpent', 5, 5);
+    assert.equal(mockFooter.style.display, 'none');
+
+    // When total is > 10: expand buttons should be rendered
+    sandboxContext.renderTableFooter('testFooter', 'mostTotalSpent', 10, 48);
+    assert.equal(mockFooter.style.display, 'flex');
+    assert.ok(capturedHtml.includes('Showing 10 of 48 items'), 'Footer must show count summary');
+    assert.ok(capturedHtml.includes('Show More'), 'Footer must have Show More button');
+    assert.ok(capturedHtml.includes('Show All (48)'), 'Footer must have Show All button');
+
+    // When fully expanded
+    sandboxContext.renderTableFooter('testFooter', 'mostTotalSpent', 48, 48);
+    assert.ok(capturedHtml.includes('Showing 48 of 48 items'), 'Footer must show expanded count');
+    assert.ok(capturedHtml.includes('Top 10'), 'Footer must have Top 10 button to collapse');
+
+    // Restore
+    sandboxContext.document.getElementById = origGetById;
+  });
+});
