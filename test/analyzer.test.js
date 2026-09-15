@@ -204,6 +204,27 @@ describe('5. Refund & Return Pairing', () => {
 });
 
 describe('6. Electronic Receipt & Barcode Generation', () => {
+  test('generateItfSvg creates authentic Interleaved 2 of 5 barcode matching Costco 64-bar / 127-element structure', (t) => {
+    if (typeof sandboxContext.generateItfSvg !== 'function') {
+      t.skip('generateItfSvg not present in context');
+      return;
+    }
+    // Costco 23-digit transaction barcode
+    const rawBarcode = '21014321000942605271638';
+    const svg = sandboxContext.generateItfSvg(rawBarcode);
+    assert.ok(svg.startsWith('<svg'), 'Output must be an SVG tag');
+    assert.ok(svg.includes('crispEdges'), 'Must include shape-rendering crispEdges for pixel-sharp rendering');
+
+    const rectMatches = svg.match(/<rect/g) || [];
+    // 24 digits (12 pairs): 2 start bars + (12 * 5) pairs bars + 2 stop bars = 64 bars
+    assert.equal(rectMatches.length, 64, 'Padded 24-digit ITF barcode must have exactly 64 black bars');
+
+    // Test that generateBarcodeSvg uses ITF for numeric strings
+    const autoSvg = sandboxContext.generateBarcodeSvg(rawBarcode);
+    const autoRectMatches = autoSvg.match(/<rect/g) || [];
+    assert.equal(autoRectMatches.length, 64, 'generateBarcodeSvg must produce authentic 64-bar ITF barcode for numeric transaction strings');
+  });
+
   test('generateCode128Svg creates a valid SVG element with bar rectangles', (t) => {
     if (typeof sandboxContext.generateCode128Svg !== 'function') {
       t.skip('Electronic receipt barcode generator not yet present in index.html');
