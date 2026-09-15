@@ -215,7 +215,7 @@ describe('6. Electronic Receipt & Barcode Generation', () => {
     assert.ok(svg.includes('<rect'), 'SVG must contain barcode bar rect elements');
   });
 
-  test('openReceiptModal renders receipt details, highlights item, and displays barcode', (t) => {
+  test('openReceiptModal renders authentic receipt details and displays barcode', (t) => {
     if (typeof sandboxContext.openReceiptModal !== 'function') {
       t.skip('Electronic receipt modal not yet present in index.html');
       return;
@@ -226,7 +226,6 @@ describe('6. Electronic Receipt & Barcode Generation', () => {
     sandboxContext.openReceiptModal(first.barcode, first.itemNumber, first.receiptIndex);
 
     assert.ok(lastPaperHtml.includes('TEST WAREHOUSE 1'), 'Receipt must display warehouse name');
-    assert.ok(lastPaperHtml.includes('SELECTED'), 'Receipt must highlight selected item');
     assert.ok(lastPaperHtml.includes('2619'), 'Receipt must show item number 2619');
     assert.ok(lastPaperHtml.includes('<svg'), 'Receipt must render barcode SVG');
   });
