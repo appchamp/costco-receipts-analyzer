@@ -951,19 +951,374 @@
       max-height: 360px;
     }
 
-    @media (max-width: 640px) {
+    /* ==========================================================================
+       Responsive Layout & Portrait Mode Styles
+       ========================================================================== */
+
+    html, body {
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+
+    .btn-mode-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .btn-mode-toggle:hover {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .btn-mode-toggle.active {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    /* Scroll container */
+    .table-scroll-container {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-top: 6px;
+    }
+
+    .scroll-hint-mobile {
+      display: none;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    /* Timeline View Controls */
+    .timeline-controls-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 6px 0;
+    }
+
+    .timeline-view-toggle {
+      display: inline-flex;
+      background: #f1f5f9;
+      padding: 3px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      gap: 2px;
+    }
+
+    .timeline-toggle-btn {
+      background: transparent;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .timeline-toggle-btn.active {
+      background: #ffffff;
+      color: var(--accent);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* Mobile Timeline Cards Feed */
+    .timeline-cards-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .history-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .history-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+    }
+
+    .history-card.card-refunded {
+      background: #f8fafc;
+      opacity: 0.65;
+    }
+
+    .history-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .history-card-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .history-card-mid {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .history-card-name {
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--text-main);
+      line-height: 1.3;
+    }
+
+    .history-card-sub {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .history-card-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 6px;
+      border-top: 1px dashed #e2e8f0;
+      font-size: 0.85rem;
+    }
+
+    .history-card-qty {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+
+    .history-card-total {
+      font-weight: 700;
+      font-size: 0.95rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Automatic Responsive Media Queries for Mobile Phones */
+    @media (max-width: 768px) {
+      .page {
+        padding: 16px 12px 48px;
+      }
       header {
-        align-items: flex-start;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      header h1 {
+        font-size: 1.45rem;
+      }
+      header p {
+        font-size: 0.84rem;
+      }
+      .header-actions {
+        flex-direction: column;
+        align-items: stretch;
       }
       .uploader {
         width: 100%;
-        justify-content: space-between;
-        flex-wrap: wrap;
+        border-radius: 12px;
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        padding: 10px;
+        gap: 6px;
+      }
+      .uploader input[type="file"] {
+        width: 100%;
       }
       .filter-row {
         flex-direction: column;
         align-items: stretch;
       }
+      .search-wrapper {
+        min-width: 100%;
+      }
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .summary-card {
+        padding: 10px 12px;
+      }
+      .summary-card .value {
+        font-size: 1.15rem;
+      }
+      .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .card {
+        padding: 14px 12px;
+      }
+      .card h2 {
+        font-size: 1rem;
+      }
+      .stats-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+      .stats-details-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .scroll-hint-mobile {
+        display: block;
+      }
+      .col-optional {
+        display: none !important;
+      }
+      table {
+        font-size: 0.76rem;
+      }
+      th, td {
+        padding: 6px 4px;
+      }
+      th:nth-child(2), td:nth-child(2) {
+        white-space: normal;
+        word-break: break-word;
+        max-width: 140px;
+      }
+      .receipt-modal-overlay {
+        padding: 8px;
+      }
+      .receipt-modal-content {
+        max-width: 100%;
+        width: 100%;
+        max-height: 95vh;
+        border-radius: 12px;
+      }
+      .receipt-paper-wrapper {
+        padding: 12px 8px 24px;
+      }
+    }
+
+    /* Dedicated Portrait Mode Class (enforced on body) */
+    body.portrait-mode .page {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px 12px 48px;
+    }
+    body.portrait-mode header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+    body.portrait-mode header h1 {
+      font-size: 1.45rem;
+    }
+    body.portrait-mode .header-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    body.portrait-mode .uploader {
+      width: 100%;
+      border-radius: 12px;
+      flex-direction: column;
+      align-items: stretch;
+      text-align: center;
+      padding: 10px;
+      gap: 6px;
+    }
+    body.portrait-mode .filter-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    body.portrait-mode .search-wrapper {
+      min-width: 100%;
+    }
+    body.portrait-mode .summary-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    body.portrait-mode .summary-card {
+      padding: 10px 12px;
+    }
+    body.portrait-mode .summary-card .value {
+      font-size: 1.15rem;
+    }
+    body.portrait-mode .grid-2 {
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    body.portrait-mode .card {
+      padding: 14px 12px;
+    }
+    body.portrait-mode .card h2 {
+      font-size: 1rem;
+    }
+    body.portrait-mode .stats-kpi-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    body.portrait-mode .stats-details-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    body.portrait-mode .col-optional {
+      display: none !important;
+    }
+    body.portrait-mode table {
+      font-size: 0.76rem;
+    }
+    body.portrait-mode th, body.portrait-mode td {
+      padding: 6px 4px;
+    }
+    body.portrait-mode th:nth-child(2), body.portrait-mode td:nth-child(2) {
+      white-space: normal;
+      word-break: break-word;
+      max-width: 140px;
+    }
+    body.portrait-mode .scroll-hint-mobile {
+      display: block;
+    }
+
+    /* Desktop Mode Override (when user forces wide view on mobile) */
+    body.desktop-mode .col-optional {
+      display: table-cell !important;
+    }
+    body.desktop-mode .scroll-hint-mobile {
+      display: block;
     }
   
     /* Receipt Link Button */
@@ -1241,13 +1596,16 @@
         <h1><span class="icon">🧾</span>Costco Receipt Dashboard</h1>
         <p>Upload your Costco receipts JSON to see spending insights.</p>
       </div>
-      <div>
+      <div class="header-actions">
+        <button id="viewModeToggleBtn" class="btn-mode-toggle" type="button" onclick="toggleGlobalViewMode()" title="Toggle between mobile portrait view and desktop wide view">
+          <span id="viewModeIcon">📱</span> <span id="viewModeText">Portrait Mode</span>
+        </button>
         <div class="uploader">
           <label for="fileInput">Receipts JSON:</label>
           <input id="fileInput" type="file" accept="application/json,.json" />
         </div>
         <div id="status" class="status">No file loaded yet.</div>
-        <button id="downloadCsv" style="display:none; margin-top: 12px; background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 99px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">Export to CSV</button>
+        <button id="downloadCsv" style="display:none; background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 99px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">Export to CSV</button>
       </div>
     </header>
 
@@ -1286,7 +1644,15 @@
         </div>
         <div id="itemHistoryPills" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
       </div>
-      <div class="table-scroll-container">
+      <div class="timeline-controls-row">
+        <div class="scroll-hint-mobile">👉 Swipe table horizontally or switch to Card view</div>
+        <div class="timeline-view-toggle">
+          <button type="button" id="btnTimelineCards" class="timeline-toggle-btn" onclick="setTimelineView('cards')">📱 Cards</button>
+          <button type="button" id="btnTimelineTable" class="timeline-toggle-btn" onclick="setTimelineView('table')">📊 Table</button>
+        </div>
+      </div>
+      <div id="itemHistoryCards" class="timeline-cards-feed" style="display: none;"></div>
+      <div class="table-scroll-container" id="itemHistoryTableContainer">
         <table>
           <thead>
             <tr>
@@ -1360,38 +1726,42 @@
       <div class="card">
         <h2><span class="icon">💰</span>Most Total Spent Items</h2>
         <p class="subtitle">Items you've spent the most money on overall.</p>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Item</th>
-              <th>Total Spent</th>
-              <th>Times Bought</th>
-              <th>Avg Price</th>
-            </tr>
-          </thead>
-          <tbody id="mostTotalSpentBody">
-          </tbody>
-        </table>
+        <div class="table-scroll-container">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Item</th>
+                <th>Total Spent</th>
+                <th class="col-optional">Times Bought</th>
+                <th class="col-optional">Avg Price</th>
+              </tr>
+            </thead>
+            <tbody id="mostTotalSpentBody">
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="card">
         <h2><span class="icon">📈</span>Biggest Price Increases</h2>
         <p class="subtitle">Items that increased in price the most over time.</p>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Item</th>
-              <th>Min → Max</th>
-              <th>Increase</th>
-              <th>Period</th>
-              <th>Rate / Month</th>
-            </tr>
-          </thead>
-          <tbody id="priceIncreaseBody">
-          </tbody>
-        </table>
+        <div class="table-scroll-container">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Item</th>
+                <th>Min → Max</th>
+                <th>Increase</th>
+                <th class="col-optional">Period</th>
+                <th class="col-optional">Rate / Month</th>
+              </tr>
+            </thead>
+            <tbody id="priceIncreaseBody">
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -1399,38 +1769,42 @@
       <div class="card">
         <h2><span class="icon">💎</span>Most Expensive Items</h2>
         <p class="subtitle">By average price (min 3 purchases).</p>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Item</th>
-              <th>Avg Price</th>
-              <th>Max Price</th>
-              <th>Purchases</th>
-            </tr>
-          </thead>
-          <tbody id="mostExpensiveBody">
-          </tbody>
-        </table>
+        <div class="table-scroll-container">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Item</th>
+                <th>Avg Price</th>
+                <th class="col-optional">Max Price</th>
+                <th>Purchases</th>
+              </tr>
+            </thead>
+            <tbody id="mostExpensiveBody">
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="card">
         <h2><span class="icon">🔥</span>Most Purchased Items</h2>
         <p class="subtitle">By number of units purchased.</p>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Item</th>
-              <th>Times Bought</th>
-              <th>Avg Price</th>
-              <th>Min → Max</th>
-              <th>Increase %</th>
-            </tr>
-          </thead>
-          <tbody id="mostPurchasedBody">
-          </tbody>
-        </table>
+        <div class="table-scroll-container">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Item</th>
+                <th>Times Bought</th>
+                <th>Avg Price</th>
+                <th class="col-optional">Min → Max</th>
+                <th class="col-optional">Increase %</th>
+              </tr>
+            </thead>
+            <tbody id="mostPurchasedBody">
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -1997,6 +2371,7 @@
     function renderItemHistory(matchingPurchases, filterQuery) {
       const historySection = document.getElementById("itemHistorySection");
       const tbody = document.getElementById("itemHistoryBody");
+      const cardsContainer = document.getElementById("itemHistoryCards");
       const titleEl = document.getElementById("itemHistoryTitle");
       const subtitleEl = document.getElementById("itemHistorySubtitle");
       const pillsContainer = document.getElementById("itemHistoryPills");
@@ -2004,18 +2379,21 @@
       if (!filterQuery || !filterQuery.trim()) {
         historySection.style.display = "none";
         tbody.innerHTML = "";
+        if (cardsContainer) cardsContainer.innerHTML = "";
         pillsContainer.innerHTML = "";
         return;
       }
 
       historySection.style.display = "block";
       tbody.innerHTML = "";
+      if (cardsContainer) cardsContainer.innerHTML = "";
       pillsContainer.innerHTML = "";
 
       if (matchingPurchases.length === 0) {
         titleEl.textContent = `Purchase History: "${filterQuery}"`;
         subtitleEl.textContent = "No matching purchases or refunds found.";
         tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">No records found matching &ldquo;${escapeHtml(filterQuery)}&rdquo;. Try another item name or code.</td></tr>`;
+        if (cardsContainer) cardsContainer.innerHTML = `<div style="text-align: center; padding: 24px; color: var(--text-muted);">No records found matching &ldquo;${escapeHtml(filterQuery)}&rdquo;.</div>`;
         return;
       }
 
@@ -2156,7 +2534,34 @@
           <td class="${amountClass}" style="text-align: right;">${formatMoney(p.netAmount)}</td>
         `;
         tbody.appendChild(tr);
+
+        if (cardsContainer) {
+          const card = document.createElement("div");
+          card.className = "history-card" + (p.isFullyMatched ? " card-refunded" : "");
+          card.innerHTML = `
+            <div class="history-card-top">
+              <button type="button" class="btn-receipt-view" onclick="openReceiptModal('${escapeHtml(p.barcode || '')}', '${escapeHtml(p.itemNumber || '')}', ${p.receiptIndex})" title="Click to view complete electronic receipt with return barcode">
+                <span class="receipt-icon">🧾</span>
+                <span>${escapeHtml(formattedDate)}</span>
+              </button>
+              <div class="history-card-status">
+                <span class="tag ${p.tagClass}">${escapeHtml(p.type)}</span>
+                ${matchedBadge}
+              </div>
+            </div>
+            <div class="history-card-mid">
+              <div class="history-card-name">${escapeHtml(p.name)}${couponBadge}</div>
+              <div class="history-card-sub">#${escapeHtml(p.itemNumber)} • 🏬 ${escapeHtml(p.warehouse)}</div>
+            </div>
+            <div class="history-card-bottom">
+              <div class="history-card-qty">${qtyDisplay} unit${Math.abs(p.unit) === 1 ? '' : 's'} @ ${unitPriceHtml}</div>
+              <div class="history-card-total ${amountClass}">${formatMoney(p.netAmount)}</div>
+            </div>
+          `;
+          cardsContainer.appendChild(card);
+        }
       });
+      updateTimelineViewDisplay();
     }
 
     function renderItemStats(matchingPurchases, filterQuery) {
@@ -2418,8 +2823,8 @@
           <td>${idx + 1}</td>
           <td><strong>${escapeHtml(row.name)}</strong><br/><span class="status">#${escapeHtml(row.itemNumber)}</span></td>
           <td class="money">${formatMoney(row.totalSpent)}</td>
-          <td>${row.purchases}×</td>
-          <td class="money">${formatMoney(row.totalSpent / row.purchases)}</td>
+          <td class="col-optional">${row.purchases}×</td>
+          <td class="money col-optional">${formatMoney(row.totalSpent / row.purchases)}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -2458,8 +2863,8 @@
           <td><strong>${escapeHtml(row.name)}</strong><br/><span class="status">#${escapeHtml(row.itemNumber)}</span></td>
           <td>${row.purchases}×</td>
           <td class="money">${formatMoney(row.totalSpent / row.purchases)}</td>
-          <td class="money">${formatMoney(min)} → ${formatMoney(max)}</td>
-          <td class="${incPct > 0 ? "pos" : "status"}">${incPct > 0 ? "+" + incPct.toFixed(1) + "%" : "0%"}</td>
+          <td class="money col-optional">${formatMoney(min)} → ${formatMoney(max)}</td>
+          <td class="${incPct > 0 ? "pos" : "status"} col-optional">${incPct > 0 ? "+" + incPct.toFixed(1) + "%" : "0%"}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -2494,7 +2899,7 @@
           <td>${idx + 1}</td>
           <td><strong>${escapeHtml(row.name)}</strong><br/><span class="status">#${escapeHtml(row.itemNumber)}</span></td>
           <td class="money">${formatMoney(row.avgPrice)}</td>
-          <td class="money">${formatMoney(row.maxPrice)}</td>
+          <td class="money col-optional">${formatMoney(row.maxPrice)}</td>
           <td>${row.purchases}×</td>
         `;
         tbody.appendChild(tr);
@@ -2564,8 +2969,8 @@
           <td><strong>${escapeHtml(row.name)}</strong><br/><span class="status">#${escapeHtml(row.itemNumber)}</span></td>
           <td class="money">${formatMoney(row.minPrice)} → ${formatMoney(row.maxPrice)}</td>
           <td class="money pos">+${formatMoney(row.increase)}</td>
-          <td>${row.months.toFixed(1)} months</td>
-          <td class="money pos">+${formatMoney(row.ratePerMonth)}/mo</td>
+          <td class="col-optional">${row.months.toFixed(1)} months</td>
+          <td class="money pos col-optional">+${formatMoney(row.ratePerMonth)}/mo</td>
         `;
         tbody.appendChild(tr);
       });
@@ -2811,6 +3216,106 @@
           badge.textContent = "v2026.09.14";
         });
     })();
+
+
+    // View Mode Management (Portrait Mode vs Desktop Mode)
+    let currentGlobalViewMode = "auto";
+    let currentTimelineView = "auto";
+    let userExplicitTimelineChoice = false;
+
+    function applyGlobalViewMode(mode) {
+      currentGlobalViewMode = mode;
+      try {
+        localStorage.setItem("costco_analyzer_view_mode", mode);
+      } catch (e) {}
+
+      const btn = document.getElementById("viewModeToggleBtn");
+      const icon = document.getElementById("viewModeIcon");
+      const text = document.getElementById("viewModeText");
+
+      document.body.classList.remove("portrait-mode", "desktop-mode");
+
+      const isMobile = (typeof window !== 'undefined' && window.matchMedia) ? 
+        (window.matchMedia("(max-width: 768px)").matches || (window.innerHeight > window.innerWidth && window.matchMedia("(max-width: 900px)").matches)) : false;
+
+      if (mode === "portrait" || (mode === "auto" && isMobile)) {
+        document.body.classList.add("portrait-mode");
+        if (btn) {
+          btn.classList.add("active");
+          if (icon) icon.textContent = "🖥️";
+          if (text) text.textContent = "Desktop View";
+        }
+        if (!userExplicitTimelineChoice) {
+          setTimelineView("cards", false);
+        }
+      } else {
+        document.body.classList.add("desktop-mode");
+        if (btn) {
+          btn.classList.remove("active");
+          if (icon) icon.textContent = "📱";
+          if (text) text.textContent = "Portrait Mode";
+        }
+        if (!userExplicitTimelineChoice) {
+          setTimelineView("table", false);
+        }
+      }
+    }
+
+    function toggleGlobalViewMode() {
+      const isCurrentlyPortrait = document.body.classList.contains("portrait-mode") || 
+        (!document.body.classList.contains("desktop-mode") && window.matchMedia && window.matchMedia("(max-width: 768px)").matches);
+      applyGlobalViewMode(isCurrentlyPortrait ? "desktop" : "portrait");
+    }
+
+    function setTimelineView(view, isUserExplicit = true) {
+      if (isUserExplicit) {
+        userExplicitTimelineChoice = true;
+      }
+      currentTimelineView = view;
+      const cardsEl = document.getElementById("itemHistoryCards");
+      const tableContainerEl = document.getElementById("itemHistoryTableContainer");
+      const btnCards = document.getElementById("btnTimelineCards");
+      const btnTable = document.getElementById("btnTimelineTable");
+
+      if (view === "cards") {
+        if (cardsEl) cardsEl.style.display = "flex";
+        if (tableContainerEl) tableContainerEl.style.display = "none";
+        if (btnCards) btnCards.classList.add("active");
+        if (btnTable) btnTable.classList.remove("active");
+      } else {
+        if (cardsEl) cardsEl.style.display = "none";
+        if (tableContainerEl) tableContainerEl.style.display = "block";
+        if (btnCards) btnCards.classList.remove("active");
+        if (btnTable) btnTable.classList.add("active");
+      }
+    }
+
+    function updateTimelineViewDisplay() {
+      const isMobile = document.body.classList.contains("portrait-mode") || 
+        (!document.body.classList.contains("desktop-mode") && (typeof window !== 'undefined' && window.matchMedia && window.matchMedia("(max-width: 768px)").matches));
+      if (!userExplicitTimelineChoice) {
+        setTimelineView(isMobile ? "cards" : "table", false);
+      } else {
+        setTimelineView(currentTimelineView, false);
+      }
+    }
+
+    // Auto-initialize view mode on load
+    try {
+      const savedMode = localStorage.getItem("costco_analyzer_view_mode") || "auto";
+      applyGlobalViewMode(savedMode);
+    } catch (e) {
+      applyGlobalViewMode("auto");
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener("resize", () => {
+        if (currentGlobalViewMode === "auto") {
+          applyGlobalViewMode("auto");
+        }
+      });
+    }
+
 
     // File input handler
     document.getElementById("fileInput").addEventListener("change", (e) => {
