@@ -6,7 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Chart.js for the Monthly Spending Trend -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
     // Code 128 Pattern Table (High-efficiency fallback generator)
     const CODE128_PATTERNS = [
       '212222','222122','222221','121223','121322','131222','122213','122312','132212','221213',
@@ -1484,7 +1485,7 @@
       const matchingPurchases = [];
       const distinctReceipts = new Set();
 
-      receipts.forEach((receipt) => {
+      receipts.forEach((receipt, receiptIdx) => {
         const items = Array.isArray(receipt.itemArray) ? receipt.itemArray : [];
         const dateStr =
           receipt.transactionDateTime ||
