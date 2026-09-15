@@ -952,41 +952,12 @@
     }
 
     /* ==========================================================================
-       Responsive Layout & Portrait Mode Styles
+       Responsive Layout & Mobile Portrait Styles (Auto-detecting)
        ========================================================================== */
 
     html, body {
       overflow-x: hidden;
       max-width: 100vw;
-    }
-
-    .btn-mode-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text-main);
-      cursor: pointer;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      transition: all 0.15s ease;
-      white-space: nowrap;
-      user-select: none;
-    }
-    .btn-mode-toggle:hover {
-      background: var(--accent-soft);
-      color: var(--accent);
-      border-color: var(--accent);
-    }
-    .btn-mode-toggle.active {
-      background: var(--accent);
-      color: #ffffff;
-      border-color: var(--accent);
-      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
     }
 
     .header-actions {
@@ -996,7 +967,7 @@
       gap: 10px;
     }
 
-    /* Scroll container */
+    /* Scroll container for tables */
     .table-scroll-container {
       width: 100%;
       overflow-x: auto;
@@ -1006,135 +977,12 @@
       margin-top: 6px;
     }
 
-    .scroll-hint-mobile {
+    .mobile-store-inline,
+    .mobile-qty-inline {
       display: none;
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      margin-bottom: 6px;
     }
 
-    /* Timeline View Controls */
-    .timeline-controls-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 10px 0 6px 0;
-    }
-
-    .timeline-view-toggle {
-      display: inline-flex;
-      background: #f1f5f9;
-      padding: 3px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      gap: 2px;
-    }
-
-    .timeline-toggle-btn {
-      background: transparent;
-      border: none;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 0.76rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.15s ease;
-      font-family: inherit;
-    }
-
-    .timeline-toggle-btn.active {
-      background: #ffffff;
-      color: var(--accent);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    /* Mobile Timeline Cards Feed */
-    .timeline-cards-feed {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 6px;
-    }
-
-    .history-card {
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-
-    .history-card:hover {
-      border-color: var(--accent);
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
-    }
-
-    .history-card.card-refunded {
-      background: #f8fafc;
-      opacity: 0.65;
-    }
-
-    .history-card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .history-card-status {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .history-card-mid {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .history-card-name {
-      font-weight: 700;
-      font-size: 0.92rem;
-      color: var(--text-main);
-      line-height: 1.3;
-    }
-
-    .history-card-sub {
-      font-size: 0.76rem;
-      color: var(--text-muted);
-    }
-
-    .history-card-bottom {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-top: 6px;
-      border-top: 1px dashed #e2e8f0;
-      font-size: 0.85rem;
-    }
-
-    .history-card-qty {
-      color: var(--text-muted);
-      font-size: 0.82rem;
-    }
-
-    .history-card-total {
-      font-weight: 700;
-      font-size: 0.95rem;
-      font-variant-numeric: tabular-nums;
-    }
-
-    /* Automatic Responsive Media Queries for Mobile Phones */
+    /* Automatic Responsive Media Queries for Mobile Phones (Portrait) */
     @media (max-width: 768px) {
       .page {
         padding: 16px 12px 48px;
@@ -1202,11 +1050,13 @@
         grid-template-columns: 1fr;
         gap: 10px;
       }
-      .scroll-hint-mobile {
-        display: block;
-      }
+      /* Tables: hide secondary columns so table fits horizontally on portrait */
       .col-optional {
         display: none !important;
+      }
+      .mobile-store-inline,
+      .mobile-qty-inline {
+        display: block;
       }
       table {
         font-size: 0.76rem;
@@ -1231,94 +1081,6 @@
       .receipt-paper-wrapper {
         padding: 12px 8px 24px;
       }
-    }
-
-    /* Dedicated Portrait Mode Class (enforced on body) */
-    body.portrait-mode .page {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 16px 12px 48px;
-    }
-    body.portrait-mode header {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 12px;
-    }
-    body.portrait-mode header h1 {
-      font-size: 1.45rem;
-    }
-    body.portrait-mode .header-actions {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    body.portrait-mode .uploader {
-      width: 100%;
-      border-radius: 12px;
-      flex-direction: column;
-      align-items: stretch;
-      text-align: center;
-      padding: 10px;
-      gap: 6px;
-    }
-    body.portrait-mode .filter-row {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    body.portrait-mode .search-wrapper {
-      min-width: 100%;
-    }
-    body.portrait-mode .summary-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
-    body.portrait-mode .summary-card {
-      padding: 10px 12px;
-    }
-    body.portrait-mode .summary-card .value {
-      font-size: 1.15rem;
-    }
-    body.portrait-mode .grid-2 {
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
-    body.portrait-mode .card {
-      padding: 14px 12px;
-    }
-    body.portrait-mode .card h2 {
-      font-size: 1rem;
-    }
-    body.portrait-mode .stats-kpi-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
-    body.portrait-mode .stats-details-grid {
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-    body.portrait-mode .col-optional {
-      display: none !important;
-    }
-    body.portrait-mode table {
-      font-size: 0.76rem;
-    }
-    body.portrait-mode th, body.portrait-mode td {
-      padding: 6px 4px;
-    }
-    body.portrait-mode th:nth-child(2), body.portrait-mode td:nth-child(2) {
-      white-space: normal;
-      word-break: break-word;
-      max-width: 140px;
-    }
-    body.portrait-mode .scroll-hint-mobile {
-      display: block;
-    }
-
-    /* Desktop Mode Override (when user forces wide view on mobile) */
-    body.desktop-mode .col-optional {
-      display: table-cell !important;
-    }
-    body.desktop-mode .scroll-hint-mobile {
-      display: block;
     }
   
     /* Receipt Link Button */
@@ -1597,9 +1359,6 @@
         <p>Upload your Costco receipts JSON to see spending insights.</p>
       </div>
       <div class="header-actions">
-        <button id="viewModeToggleBtn" class="btn-mode-toggle" type="button" onclick="toggleGlobalViewMode()" title="Toggle between mobile portrait view and desktop wide view">
-          <span id="viewModeIcon">📱</span> <span id="viewModeText">Portrait Mode</span>
-        </button>
         <div class="uploader">
           <label for="fileInput">Receipts JSON:</label>
           <input id="fileInput" type="file" accept="application/json,.json" />
@@ -1644,24 +1403,16 @@
         </div>
         <div id="itemHistoryPills" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
       </div>
-      <div class="timeline-controls-row">
-        <div class="scroll-hint-mobile">👉 Swipe table horizontally or switch to Card view</div>
-        <div class="timeline-view-toggle">
-          <button type="button" id="btnTimelineCards" class="timeline-toggle-btn" onclick="setTimelineView('cards')">📱 Cards</button>
-          <button type="button" id="btnTimelineTable" class="timeline-toggle-btn" onclick="setTimelineView('table')">📊 Table</button>
-        </div>
-      </div>
-      <div id="itemHistoryCards" class="timeline-cards-feed" style="display: none;"></div>
-      <div class="table-scroll-container" id="itemHistoryTableContainer">
+      <div class="table-scroll-container">
         <table>
           <thead>
             <tr>
               <th>Date/Time</th>
               <th>Item</th>
-              <th>Store Location</th>
+              <th class="col-optional">Store Location</th>
               <th>Sale/Return</th>
-              <th style="text-align: right;">Units</th>
-              <th style="text-align: right;">Unit Price</th>
+              <th class="col-optional" style="text-align: right;">Units</th>
+              <th class="col-optional" style="text-align: right;">Unit Price</th>
               <th style="text-align: right;">Total Price</th>
             </tr>
           </thead>
@@ -2371,7 +2122,6 @@
     function renderItemHistory(matchingPurchases, filterQuery) {
       const historySection = document.getElementById("itemHistorySection");
       const tbody = document.getElementById("itemHistoryBody");
-      const cardsContainer = document.getElementById("itemHistoryCards");
       const titleEl = document.getElementById("itemHistoryTitle");
       const subtitleEl = document.getElementById("itemHistorySubtitle");
       const pillsContainer = document.getElementById("itemHistoryPills");
@@ -2379,21 +2129,18 @@
       if (!filterQuery || !filterQuery.trim()) {
         historySection.style.display = "none";
         tbody.innerHTML = "";
-        if (cardsContainer) cardsContainer.innerHTML = "";
         pillsContainer.innerHTML = "";
         return;
       }
 
       historySection.style.display = "block";
       tbody.innerHTML = "";
-      if (cardsContainer) cardsContainer.innerHTML = "";
       pillsContainer.innerHTML = "";
 
       if (matchingPurchases.length === 0) {
         titleEl.textContent = `Purchase History: "${filterQuery}"`;
         subtitleEl.textContent = "No matching purchases or refunds found.";
         tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">No records found matching &ldquo;${escapeHtml(filterQuery)}&rdquo;. Try another item name or code.</td></tr>`;
-        if (cardsContainer) cardsContainer.innerHTML = `<div style="text-align: center; padding: 24px; color: var(--text-muted);">No records found matching &ldquo;${escapeHtml(filterQuery)}&rdquo;.</div>`;
         return;
       }
 
@@ -2521,47 +2268,26 @@
               <span>${escapeHtml(formattedDate)}</span>
             </button>
           </td>
-          <td>${itemHtml}</td>
-          <td><strong>${escapeHtml(p.warehouse)}</strong></td>
+          <td>
+            ${itemHtml}
+            <div class="mobile-store-inline" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">🏬 ${escapeHtml(p.warehouse)}</div>
+          </td>
+          <td class="col-optional"><strong>${escapeHtml(p.warehouse)}</strong></td>
           <td>
             <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
               <span class="tag ${p.tagClass}">${escapeHtml(p.type)}</span>
               ${matchedBadge}
             </div>
           </td>
-          <td style="text-align: right; font-variant-numeric: tabular-nums;">${qtyDisplay}</td>
-          <td style="text-align: right;">${unitPriceHtml}</td>
-          <td class="${amountClass}" style="text-align: right;">${formatMoney(p.netAmount)}</td>
+          <td class="col-optional" style="text-align: right; font-variant-numeric: tabular-nums;">${qtyDisplay}</td>
+          <td class="col-optional" style="text-align: right;">${unitPriceHtml}</td>
+          <td class="${amountClass}" style="text-align: right;">
+            <div>${formatMoney(p.netAmount)}</div>
+            <div class="mobile-qty-inline" style="font-size: 0.72rem; font-weight: normal; color: var(--text-muted); margin-top: 2px;">${qtyDisplay} @ ${formatMoney(p.netUnitPrice)}</div>
+          </td>
         `;
         tbody.appendChild(tr);
-
-        if (cardsContainer) {
-          const card = document.createElement("div");
-          card.className = "history-card" + (p.isFullyMatched ? " card-refunded" : "");
-          card.innerHTML = `
-            <div class="history-card-top">
-              <button type="button" class="btn-receipt-view" onclick="openReceiptModal('${escapeHtml(p.barcode || '')}', '${escapeHtml(p.itemNumber || '')}', ${p.receiptIndex})" title="Click to view complete electronic receipt with return barcode">
-                <span class="receipt-icon">🧾</span>
-                <span>${escapeHtml(formattedDate)}</span>
-              </button>
-              <div class="history-card-status">
-                <span class="tag ${p.tagClass}">${escapeHtml(p.type)}</span>
-                ${matchedBadge}
-              </div>
-            </div>
-            <div class="history-card-mid">
-              <div class="history-card-name">${escapeHtml(p.name)}${couponBadge}</div>
-              <div class="history-card-sub">#${escapeHtml(p.itemNumber)} • 🏬 ${escapeHtml(p.warehouse)}</div>
-            </div>
-            <div class="history-card-bottom">
-              <div class="history-card-qty">${qtyDisplay} unit${Math.abs(p.unit) === 1 ? '' : 's'} @ ${unitPriceHtml}</div>
-              <div class="history-card-total ${amountClass}">${formatMoney(p.netAmount)}</div>
-            </div>
-          `;
-          cardsContainer.appendChild(card);
-        }
       });
-      updateTimelineViewDisplay();
     }
 
     function renderItemStats(matchingPurchases, filterQuery) {
@@ -3216,105 +2942,6 @@
           badge.textContent = "v2026.09.14";
         });
     })();
-
-
-    // View Mode Management (Portrait Mode vs Desktop Mode)
-    let currentGlobalViewMode = "auto";
-    let currentTimelineView = "auto";
-    let userExplicitTimelineChoice = false;
-
-    function applyGlobalViewMode(mode) {
-      currentGlobalViewMode = mode;
-      try {
-        localStorage.setItem("costco_analyzer_view_mode", mode);
-      } catch (e) {}
-
-      const btn = document.getElementById("viewModeToggleBtn");
-      const icon = document.getElementById("viewModeIcon");
-      const text = document.getElementById("viewModeText");
-
-      document.body.classList.remove("portrait-mode", "desktop-mode");
-
-      const isMobile = (typeof window !== 'undefined' && window.matchMedia) ? 
-        (window.matchMedia("(max-width: 768px)").matches || (window.innerHeight > window.innerWidth && window.matchMedia("(max-width: 900px)").matches)) : false;
-
-      if (mode === "portrait" || (mode === "auto" && isMobile)) {
-        document.body.classList.add("portrait-mode");
-        if (btn) {
-          btn.classList.add("active");
-          if (icon) icon.textContent = "🖥️";
-          if (text) text.textContent = "Desktop View";
-        }
-        if (!userExplicitTimelineChoice) {
-          setTimelineView("cards", false);
-        }
-      } else {
-        document.body.classList.add("desktop-mode");
-        if (btn) {
-          btn.classList.remove("active");
-          if (icon) icon.textContent = "📱";
-          if (text) text.textContent = "Portrait Mode";
-        }
-        if (!userExplicitTimelineChoice) {
-          setTimelineView("table", false);
-        }
-      }
-    }
-
-    function toggleGlobalViewMode() {
-      const isCurrentlyPortrait = document.body.classList.contains("portrait-mode") || 
-        (!document.body.classList.contains("desktop-mode") && window.matchMedia && window.matchMedia("(max-width: 768px)").matches);
-      applyGlobalViewMode(isCurrentlyPortrait ? "desktop" : "portrait");
-    }
-
-    function setTimelineView(view, isUserExplicit = true) {
-      if (isUserExplicit) {
-        userExplicitTimelineChoice = true;
-      }
-      currentTimelineView = view;
-      const cardsEl = document.getElementById("itemHistoryCards");
-      const tableContainerEl = document.getElementById("itemHistoryTableContainer");
-      const btnCards = document.getElementById("btnTimelineCards");
-      const btnTable = document.getElementById("btnTimelineTable");
-
-      if (view === "cards") {
-        if (cardsEl) cardsEl.style.display = "flex";
-        if (tableContainerEl) tableContainerEl.style.display = "none";
-        if (btnCards) btnCards.classList.add("active");
-        if (btnTable) btnTable.classList.remove("active");
-      } else {
-        if (cardsEl) cardsEl.style.display = "none";
-        if (tableContainerEl) tableContainerEl.style.display = "block";
-        if (btnCards) btnCards.classList.remove("active");
-        if (btnTable) btnTable.classList.add("active");
-      }
-    }
-
-    function updateTimelineViewDisplay() {
-      const isMobile = document.body.classList.contains("portrait-mode") || 
-        (!document.body.classList.contains("desktop-mode") && (typeof window !== 'undefined' && window.matchMedia && window.matchMedia("(max-width: 768px)").matches));
-      if (!userExplicitTimelineChoice) {
-        setTimelineView(isMobile ? "cards" : "table", false);
-      } else {
-        setTimelineView(currentTimelineView, false);
-      }
-    }
-
-    // Auto-initialize view mode on load
-    try {
-      const savedMode = localStorage.getItem("costco_analyzer_view_mode") || "auto";
-      applyGlobalViewMode(savedMode);
-    } catch (e) {
-      applyGlobalViewMode("auto");
-    }
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener("resize", () => {
-        if (currentGlobalViewMode === "auto") {
-          applyGlobalViewMode("auto");
-        }
-      });
-    }
 
 
     // File input handler
