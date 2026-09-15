@@ -671,13 +671,13 @@
         <table>
           <thead>
             <tr>
-              <th>Date & Time</th>
-              <th>Type</th>
-              <th>Warehouse</th>
+              <th>Date/Time</th>
               <th>Item</th>
-              <th>Qty</th>
-              <th>Unit Price</th>
-              <th>Total Amount</th>
+              <th>Store Location</th>
+              <th>Sale/Return</th>
+              <th style="text-align: right;">Units</th>
+              <th style="text-align: right;">Unit Price</th>
+              <th style="text-align: right;">Total Price</th>
             </tr>
           </thead>
           <tbody id="itemHistoryBody">
@@ -1518,14 +1518,14 @@
 
         tr.innerHTML = `
           <td>${escapeHtml(formattedDate)}</td>
+          <td>${itemHtml}</td>
+          <td><strong>${escapeHtml(p.warehouse)}</strong></td>
           <td>
             <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
               <span class="tag ${p.tagClass}">${escapeHtml(p.type)}</span>
               ${matchedBadge}
             </div>
           </td>
-          <td><strong>${escapeHtml(p.warehouse)}</strong></td>
-          <td>${itemHtml}</td>
           <td style="text-align: right; font-variant-numeric: tabular-nums;">${qtyDisplay}</td>
           <td style="text-align: right;">${unitPriceHtml}</td>
           <td class="${amountClass}" style="text-align: right;">${formatMoney(p.netAmount)}</td>
