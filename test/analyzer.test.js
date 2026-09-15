@@ -261,11 +261,9 @@ describe('7. Mobile Portrait & Responsive Layout Integrity', () => {
     assert.equal(scrollContainerCount, tableCount, 'Every table must be wrapped in a table-scroll-container');
   });
 
-  test('Portrait Mode toggle and Mobile Timeline card feed elements exist in HTML', () => {
-    assert.ok(htmlContent.includes('id="viewModeToggleBtn"'), 'Must have Portrait Mode toggle button in header');
-    assert.ok(htmlContent.includes('id="itemHistoryCards"'), 'Must have itemHistoryCards container for mobile card view');
-    assert.ok(htmlContent.includes('id="btnTimelineCards"'), 'Must have button to toggle card view');
-    assert.ok(htmlContent.includes('id="btnTimelineTable"'), 'Must have button to toggle table view');
+  test('Manual toggle buttons are removed in favor of automatic mobile media queries', () => {
+    assert.ok(!htmlContent.includes('id="viewModeToggleBtn"'), 'Manual viewModeToggleBtn must be removed');
+    assert.ok(!htmlContent.includes('id="btnTimelineCards"'), 'Manual timeline toggle button must be removed');
   });
 
   test('Optional table columns have col-optional class for horizontal portrait fitting', () => {
@@ -273,9 +271,8 @@ describe('7. Mobile Portrait & Responsive Layout Integrity', () => {
     assert.ok(colOptionalMatches >= 6, 'Must mark secondary columns with col-optional class to fit portrait screens');
   });
 
-  test('applyGlobalViewMode and setTimelineView functions are available in context', () => {
-    assert.equal(typeof sandboxContext.applyGlobalViewMode, 'function', 'applyGlobalViewMode must be defined');
-    assert.equal(typeof sandboxContext.toggleGlobalViewMode, 'function', 'toggleGlobalViewMode must be defined');
-    assert.equal(typeof sandboxContext.setTimelineView, 'function', 'setTimelineView must be defined');
+  test('Responsive media query for mobile portrait layout exists in CSS', () => {
+    assert.ok(htmlContent.includes('@media (max-width: 768px)'), 'Must include @media (max-width: 768px) responsive query');
+    assert.ok(htmlContent.includes('overflow-x: hidden'), 'Must include overflow-x: hidden to prevent horizontal page scrolling');
   });
 });
