@@ -1,0 +1,9 @@
+{
+  "name": "costco-receipts-analyzer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Client-side Costco Receipts Analyzer",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}
