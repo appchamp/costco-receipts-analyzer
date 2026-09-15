@@ -251,3 +251,31 @@ describe('6. Electronic Receipt & Barcode Generation', () => {
     assert.ok(lastPaperHtml.includes('<svg'), 'Receipt must render barcode SVG');
   });
 });
+
+
+describe('7. Mobile Portrait & Responsive Layout Integrity', () => {
+  test('All data tables are wrapped in table-scroll-container to prevent horizontal blowout', () => {
+    const tableCount = (htmlContent.match(/<table/g) || []).length;
+    const scrollContainerCount = (htmlContent.match(/class="table-scroll-container/g) || []).length;
+    assert.ok(tableCount >= 5, 'Must contain at least 5 tables');
+    assert.equal(scrollContainerCount, tableCount, 'Every table must be wrapped in a table-scroll-container');
+  });
+
+  test('Portrait Mode toggle and Mobile Timeline card feed elements exist in HTML', () => {
+    assert.ok(htmlContent.includes('id="viewModeToggleBtn"'), 'Must have Portrait Mode toggle button in header');
+    assert.ok(htmlContent.includes('id="itemHistoryCards"'), 'Must have itemHistoryCards container for mobile card view');
+    assert.ok(htmlContent.includes('id="btnTimelineCards"'), 'Must have button to toggle card view');
+    assert.ok(htmlContent.includes('id="btnTimelineTable"'), 'Must have button to toggle table view');
+  });
+
+  test('Optional table columns have col-optional class for horizontal portrait fitting', () => {
+    const colOptionalMatches = (htmlContent.match(/class="col-optional"/g) || []).length;
+    assert.ok(colOptionalMatches >= 6, 'Must mark secondary columns with col-optional class to fit portrait screens');
+  });
+
+  test('applyGlobalViewMode and setTimelineView functions are available in context', () => {
+    assert.equal(typeof sandboxContext.applyGlobalViewMode, 'function', 'applyGlobalViewMode must be defined');
+    assert.equal(typeof sandboxContext.toggleGlobalViewMode, 'function', 'toggleGlobalViewMode must be defined');
+    assert.equal(typeof sandboxContext.setTimelineView, 'function', 'setTimelineView must be defined');
+  });
+});
