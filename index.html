@@ -7,6 +7,279 @@
 
   <!-- Chart.js for the Monthly Spending Trend -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Code 128 Pattern Table (High-efficiency fallback generator)
+    const CODE128_PATTERNS = [
+      '212222','222122','222221','121223','121322','131222','122213','122312','132212','221213',
+      '221312','231212','112232','122132','122231','113222','123122','123221','223211','221132',
+      '221231','213212','223112','312131','311222','321122','321221','312212','322112','322211',
+      '212123','212321','232121','111323','131123','131321','112313','132113','132311','211313',
+      '231113','231311','112133','112331','132131','113123','113321','133121','313121','211331',
+      '231131','213113','213311','213131','311123','311321','331121','312113','312311','332111',
+      '314111','221411','431111','111224','111422','121124','121421','141122','141221','112214',
+      '112412','122114','122411','142112','142211','241211','221114','413111','241112','134111',
+      '111242','121142','121241','114212','124112','124211','411212','421112','421211','212141',
+      '214121','412121','111143','111341','131141','114113','114311','411113','411311','113141',
+      '114131','311141','411131','211412','211214','211232','2331112'
+    ];
+
+    function generateCode128Svg(text) {
+      if (!text) return '';
+      let codeSum = 104;
+      const codes = [104];
+      for (let i = 0; i < text.length; i++) {
+        const code = text.charCodeAt(i) - 32;
+        codes.push(code);
+        codeSum += code * (i + 1);
+      }
+      codes.push(codeSum % 103);
+      codes.push(106);
+
+      let pattern = codes.map(c => CODE128_PATTERNS[c] || '111111').join('');
+      let totalWidth = 0;
+      for (let i = 0; i < pattern.length; i++) totalWidth += parseInt(pattern[i], 10);
+
+      let x = 0;
+      let rects = '';
+      for (let i = 0; i < pattern.length; i++) {
+        const width = parseInt(pattern[i], 10);
+        if (i % 2 === 0) {
+          rects += `<rect x="${x}" y="0" width="${width}" height="65" fill="#000000"/>`;
+        }
+        x += width;
+      }
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} 65" preserveAspectRatio="none" class="receipt-barcode-svg">${rects}</svg>`;
+    }
+
+    function generateBarcodeSvg(barcodeText) {
+      if (!barcodeText) return '<div style="color: #6b7280; font-size: 0.8rem; padding: 12px;">No Barcode Available</div>';
+      // Attempt JsBarcode if library is available
+      if (window.JsBarcode) {
+        try {
+          const svgEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          JsBarcode(svgEl, barcodeText, {
+            format: "CODE128",
+            width: 2,
+            height: 65,
+            displayValue: false,
+            margin: 0
+          });
+          svgEl.setAttribute("class", "receipt-barcode-svg");
+          return svgEl.outerHTML;
+        } catch (e) {
+          console.warn("JsBarcode failed, using internal Code128 generator", e);
+        }
+      }
+      return generateCode128Svg(barcodeText);
+    }
+
+    function formatReceiptMoney(amt) {
+      const num = Number(amt) || 0;
+      const absStr = Math.abs(num).toFixed(2);
+      return num < 0 ? absStr + '-' : absStr;
+    }
+
+    let activeReceiptBarcode = "";
+
+    function openReceiptModal(barcode, itemNumber, receiptIndex) {
+      let receipt = null;
+      if (typeof receiptIndex === "number" && currentReceipts[receiptIndex]) {
+        receipt = currentReceipts[receiptIndex];
+      } else if (barcode) {
+        receipt = currentReceipts.find(r => r.transactionBarcode === barcode);
+      }
+      if (!receipt) {
+        alert("Receipt details not found for this transaction.");
+        return;
+      }
+      renderReceiptModal(receipt, itemNumber);
+    }
+
+    function renderReceiptModal(receipt) {
+      activeReceiptBarcode = receipt.transactionBarcode || "";
+      const paper = document.getElementById("receiptPaper");
+      if (!paper) return;
+
+      const warehouseName = receipt.warehouseName || receipt.warehouseShortName || "COSTCO";
+      const warehouseNum = receipt.warehouseNumber ? `#${receipt.warehouseNumber}` : "";
+      const address1 = receipt.warehouseAddress1 || "";
+      const cityStateZip = [
+        receipt.warehouseCity,
+        receipt.warehouseState ? `${receipt.warehouseState} ${receipt.warehousePostalCode || ''}`.trim() : receipt.warehousePostalCode
+      ].filter(Boolean).join(", ");
+
+      const barcodeSvg = generateBarcodeSvg(activeReceiptBarcode);
+      const barcodeDisplay = activeReceiptBarcode || "–";
+
+      // Build Items HTML matching authentic Costco format
+      let itemsHtml = "";
+      (receipt.itemArray || []).forEach((it) => {
+        if (isVoidItem(it)) return;
+        const u = Number(it.unit) || 0;
+        const a = Number(it.amount) || 0;
+        const num = String(it.itemNumber || "").trim();
+        const desc = (it.itemDescription01 || it.itemDescription02 || num).trim();
+        const unitPrice = u !== 0 ? Math.abs(a / u) : 0;
+        const qtyLine = Math.abs(u) > 1 ? `<div class="receipt-item-qty">${Math.abs(u)} @ ${unitPrice.toFixed(2)}</div>` : "";
+        const amtStr = formatReceiptMoney(a);
+        const taxFlag = it.taxFlag || (a !== 0 ? "Y" : "");
+
+        itemsHtml += `
+          <div class="receipt-item-block">
+            ${qtyLine}
+            <div class="receipt-item-row">
+              <div class="receipt-item-left">
+                <span class="receipt-item-code">${escapeHtml(num)}</span>
+                <span class="receipt-item-desc">${escapeHtml(desc)}</span>
+              </div>
+              <div class="receipt-item-right">
+                <span>${amtStr}</span>
+                <span class="receipt-item-tax">${escapeHtml(taxFlag)}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      const subTotal = receipt.subTotal ?? (receipt.total - (receipt.taxes || 0));
+      const taxes = receipt.taxes ?? 0;
+      const total = receipt.total ?? 0;
+
+      let tenderDesc = "CHIP\nread";
+      let last4 = "0000";
+      if (receipt.tenderArray && receipt.tenderArray.length > 0) {
+        const t = receipt.tenderArray[0];
+        tenderDesc = t.tenderDescription || "CHIP read";
+        last4 = t.displayAccountNumber || last4;
+      }
+      const transType = (receipt.transactionType || "PURCHASE").toUpperCase();
+      const rawDt = receipt.transactionDateTime || receipt.transactionDate || "";
+      let datePart = receipt.transactionDate || "";
+      let timePart = "";
+      if (rawDt.includes("T")) {
+        const parts = rawDt.split("T");
+        datePart = parts[0];
+        timePart = parts[1].slice(0, 5);
+      }
+      // Format date as MM/DD/YYYY to match real receipt
+      if (datePart && datePart.includes("-")) {
+        const dParts = datePart.split("-");
+        if (dParts.length === 3) {
+          datePart = `${dParts[1]}/${dParts[2]}/${dParts[0]}`;
+        }
+      }
+      const posDetails = `${datePart}  ${timePart}  ${receipt.warehouseNumber || ''} ${receipt.registerNumber || ''} ${receipt.transactionNumber || ''} ${receipt.operatorNumber || ''}`.trim();
+
+      paper.innerHTML = `
+        <!-- Store Location Header (pruned right after logo) -->
+        <div class="receipt-store-header">
+          <div class="receipt-store-name">${escapeHtml(warehouseName)} ${escapeHtml(warehouseNum)}</div>
+          ${address1 ? `<div class="receipt-store-addr">${escapeHtml(address1)}</div>` : ''}
+          ${cityStateZip ? `<div class="receipt-store-addr">${escapeHtml(cityStateZip)}</div>` : ''}
+        </div>
+
+        <!-- Barcode Section -->
+        <div class="receipt-barcode-box">
+          <div style="width: 100%; max-width: 320px; margin: 0 auto;">
+            ${barcodeSvg}
+          </div>
+          <div class="receipt-barcode-num">${escapeHtml(barcodeDisplay)}</div>
+        </div>
+
+        <!-- Items List -->
+        <div class="receipt-items-container">
+          ${itemsHtml}
+        </div>
+
+        <!-- Totals (authentic alignment) -->
+        <div class="receipt-totals">
+          <div class="receipt-subtotal-row">
+            <span style="margin-right: 18px;">SUBTOTAL</span>
+            <span style="min-width: 60px; text-align: right;">${formatReceiptMoney(subTotal)}</span>
+          </div>
+          <div class="receipt-tax-row">
+            <span style="margin-right: 18px;">TAX</span>
+            <span style="min-width: 60px; text-align: right;">${formatReceiptMoney(taxes)}</span>
+          </div>
+          <div class="receipt-total-row">
+            <span style="letter-spacing: 1px;">**** TOTAL</span>
+            <span class="receipt-total-box">${formatReceiptMoney(total)}</span>
+          </div>
+        </div>
+
+        <!-- Dashed Divider -->
+        <div class="receipt-divider-dashes">
+          - - - - - - - - - - - - - - - - - - - -
+        </div>
+
+        <!-- Payment / Tender Details -->
+        <div class="receipt-tender-block">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span>XXXXXXXXXXXX${escapeHtml(last4)}</span>
+            <span style="text-align: right; white-space: pre-line;">${escapeHtml(tenderDesc)}</span>
+          </div>
+          <div style="margin-bottom: 2px; font-weight: 600;">APPROVED - ${escapeHtml(transType)}</div>
+          <div style="margin-bottom: 4px;">AMOUNT: ${total < 0 ? '-' : ''}$${Math.abs(total).toFixed(2)}</div>
+          <div style="margin-top: 6px; font-size: 0.78rem; color: #374151;">
+            ${escapeHtml(posDetails)}
+          </div>
+        </div>
+      `;
+
+      const overlay = document.getElementById("receiptModalOverlay");
+      if (overlay) {
+        overlay.style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+    }
+
+    function closeReceiptModal() {
+      const overlay = document.getElementById("receiptModalOverlay");
+      if (overlay) {
+        overlay.style.display = "none";
+        document.body.style.overflow = "";
+      }
+    }
+
+    function handleReceiptOverlayClick(e) {
+      if (e.target && e.target.id === "receiptModalOverlay") {
+        closeReceiptModal();
+      }
+    }
+
+    function copyReceiptBarcode() {
+      if (!activeReceiptBarcode) return;
+      navigator.clipboard.writeText(activeReceiptBarcode).then(() => {
+        const btn = document.getElementById("copyBarcodeBtn");
+        if (btn) {
+          const original = btn.textContent;
+          btn.textContent = "✓ Copied!";
+          btn.style.background = "#dcfce7";
+          btn.style.color = "#15803d";
+          setTimeout(() => {
+            btn.textContent = original;
+            btn.style.background = "";
+            btn.style.color = "";
+          }, 2000);
+        }
+      }).catch(err => {
+        console.error("Clipboard copy failed:", err);
+      });
+    }
+
+    function printReceipt() {
+      window.print();
+    }
+
+    // Close on Escape key
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeReceiptModal();
+      }
+    });
+  </script>
+  <!-- JsBarcode for rendering crisp Code 128 barcodes -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
   <style>
     :root {
@@ -613,6 +886,273 @@
         align-items: stretch;
       }
     }
+  
+    /* Receipt Link Button */
+    .btn-receipt-view {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(37, 99, 235, 0.05);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--accent);
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+    }
+    .btn-receipt-view:hover {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(37, 99, 235, 0.2);
+    }
+    .btn-receipt-view .receipt-icon {
+      font-size: 0.95rem;
+      line-height: 1;
+    }
+
+    /* Receipt Modal Styles - Authentic Costco Electronic Receipt */
+    .receipt-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 99999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+    .receipt-modal-content {
+      background: #ffffff;
+      border-radius: 14px;
+      max-width: 390px;
+      width: 100%;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+      animation: receiptFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes receiptFadeIn {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .receipt-modal-header {
+      padding: 14px 18px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .receipt-modal-title {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: #111827;
+    }
+    .receipt-modal-close-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.35rem;
+      line-height: 1;
+      color: #4b5563;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .receipt-modal-close-btn:hover {
+      color: #000000;
+    }
+    .receipt-paper-wrapper {
+      overflow-y: auto;
+      padding: 18px 16px 28px 16px;
+      display: flex;
+      justify-content: center;
+      background: #ffffff;
+    }
+    .receipt-paper {
+      background: #ffffff;
+      width: 100%;
+      max-width: 340px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 0.85rem;
+      color: #000000;
+      line-height: 1.32;
+      -webkit-font-smoothing: antialiased;
+    }
+    .receipt-store-header {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .receipt-store-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #000000;
+      letter-spacing: 0.2px;
+      margin-bottom: 2px;
+    }
+    .receipt-store-addr {
+      font-size: 0.82rem;
+      font-weight: 400;
+      color: #111827;
+      line-height: 1.25;
+    }
+    .receipt-barcode-box {
+      margin: 10px 0 16px 0;
+      text-align: center;
+    }
+    .receipt-barcode-svg {
+      width: 100%;
+      max-width: 320px;
+      height: 65px;
+      margin: 0 auto;
+      display: block;
+    }
+    .receipt-barcode-num {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 0.88rem;
+      font-weight: 400;
+      color: #000000;
+      margin-top: 4px;
+      text-align: center;
+      letter-spacing: 0.3px;
+      font-variant-numeric: tabular-nums;
+    }
+    .receipt-items-container {
+      margin-top: 14px;
+    }
+    .receipt-item-block {
+      margin-bottom: 3px;
+      font-variant-numeric: tabular-nums;
+    }
+    .receipt-item-qty {
+      font-size: 0.82rem;
+      color: #000000;
+      margin-bottom: 1px;
+      padding-left: 12px;
+    }
+    .receipt-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-size: 0.84rem;
+    }
+    .receipt-item-left {
+      display: flex;
+      gap: 8px;
+      flex: 1;
+      overflow: hidden;
+    }
+    .receipt-item-code {
+      min-width: 58px;
+      flex-shrink: 0;
+    }
+    .receipt-item-desc {
+      flex: 1;
+      word-break: break-word;
+      text-transform: uppercase;
+    }
+    .receipt-item-right {
+      white-space: nowrap;
+      text-align: right;
+      margin-left: 8px;
+      display: flex;
+      gap: 4px;
+    }
+    .receipt-item-tax {
+      min-width: 10px;
+      text-align: right;
+    }
+    .receipt-totals {
+      margin-top: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+    .receipt-subtotal-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 22px;
+      font-size: 0.84rem;
+      margin-bottom: 2px;
+    }
+    .receipt-tax-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 22px;
+      font-size: 0.84rem;
+      margin-bottom: 4px;
+    }
+    .receipt-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    .receipt-total-box {
+      background: #000000;
+      color: #ffffff;
+      padding: 1px 6px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      font-variant-numeric: tabular-nums;
+      display: inline-block;
+    }
+    .receipt-divider-dashes {
+      text-align: center;
+      color: #374151;
+      letter-spacing: 2px;
+      margin: 14px 0 10px 0;
+      font-size: 0.82rem;
+    }
+    .receipt-tender-block {
+      font-size: 0.82rem;
+      color: #000000;
+      line-height: 1.35;
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #receiptModalOverlay,
+      #receiptModalOverlay .receipt-paper,
+      #receiptModalOverlay .receipt-paper * {
+        visibility: visible;
+      }
+      #receiptModalOverlay {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: none;
+        padding: 0;
+      }
+      .receipt-modal-content {
+        box-shadow: none;
+        background: none;
+        max-width: 100%;
+      }
+      .receipt-modal-header {
+        display: none !important;
+      }
+      .receipt-paper-wrapper {
+        background: none;
+        padding: 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -865,7 +1405,7 @@
 
     function extractUniqueItems(receipts) {
       const itemMap = new Map();
-      receipts.forEach((receipt) => {
+      receipts.forEach((receipt, receiptIdx) => {
         const items = Array.isArray(receipt.itemArray) ? receipt.itemArray : [];
         items.forEach((item) => {
           if (isVoidItem(item)) return;
@@ -997,7 +1537,7 @@
       const matchingPurchases = [];
       const distinctReceipts = new Set();
 
-      receipts.forEach((receipt) => {
+      receipts.forEach((receipt, receiptIdx) => {
         const items = Array.isArray(receipt.itemArray) ? receipt.itemArray : [];
         const dateStr =
           receipt.transactionDateTime ||
@@ -1096,6 +1636,7 @@
               originalUnitPrice: originalUnitPrice,
               netUnitPrice: netUnitPrice,
               barcode: receiptBarcode,
+              receiptIndex: receiptIdx,
             });
 
             totalSpent += netAmount;
@@ -1517,7 +2058,12 @@
         const amountClass = p.netAmount < 0 ? "money neg" : "money pos";
 
         tr.innerHTML = `
-          <td>${escapeHtml(formattedDate)}</td>
+          <td>
+            <button type="button" class="btn-receipt-view" onclick="openReceiptModal('${escapeHtml(p.barcode || '')}', '${escapeHtml(p.itemNumber || '')}', ${p.receiptIndex})" title="Click to view complete electronic receipt with return barcode">
+              <span class="receipt-icon">🧾</span>
+              <span>${escapeHtml(formattedDate)}</span>
+            </button>
+          </td>
           <td>${itemHtml}</td>
           <td><strong>${escapeHtml(p.warehouse)}</strong></td>
           <td>
@@ -2212,5 +2758,20 @@
       reader.readAsText(file);
     });
   </script>
+  <!-- Electronic Receipt Modal -->
+  <div id="receiptModalOverlay" class="receipt-modal-overlay" style="display: none;" onclick="handleReceiptOverlayClick(event)">
+    <div class="receipt-modal-content">
+      <div class="receipt-modal-header">
+        <div class="receipt-modal-title">In-Warehouse Receipt</div>
+        <button type="button" class="receipt-modal-close-btn" onclick="closeReceiptModal()" title="Close (Esc)" aria-label="Close">✕</button>
+      </div>
+      <div class="receipt-paper-wrapper">
+        <div class="receipt-paper" id="receiptPaper">
+          <!-- Receipt contents injected dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
